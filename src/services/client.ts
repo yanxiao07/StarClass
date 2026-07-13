@@ -32,10 +32,22 @@ class ApiClient {
       headers,
     });
 
-    const data = await response.json();
+    let data;
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        data = await response.json();
+      } else {
+        const text = await response.text();
+        data = { error: text || '服务器返回非JSON响应' };
+      }
+    } catch {
+      const text = await response.text();
+      data = { error: text || '无法解析响应' };
+    }
 
     if (!response.ok) {
-      throw new Error(data.error || '请求失败');
+      throw new Error(data.error || data.detail || '请求失败');
     }
 
     return data;

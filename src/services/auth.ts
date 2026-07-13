@@ -36,7 +36,13 @@ interface UserResponse {
 
 export const authApi = {
   async register(data: RegisterData): Promise<AuthResponse> {
-    return apiClient.post<AuthResponse>('/api/auth/register', data);
+    return apiClient.post<AuthResponse>('/api/auth/register', {
+      email: data.email,
+      password: data.password,
+      name: data.name,
+      role: data.role,
+      nickname: data.name,
+    });
   },
 
   async login(data: LoginData): Promise<AuthResponse> {
