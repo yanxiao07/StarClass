@@ -1,0 +1,41 @@
+[project]
+name = "starclass-backend"
+version = "0.1.0"
+description = "StarClass AI Agent Educational Platform Backend"
+requires-python = ">=3.11"
+authors = [
+  { name = "yanxiao07", email = "2801719875@qq.com" }
+]
+
+[project.dependencies]
+fastapi = ">=0.115.0"
+uvicorn = ">=0.30.0"
+sqlalchemy = ">=2.0.0"
+pymysql = ">=1.1.0"
+python-jose = ">=3.3.0"
+cryptography = ">=43.0.0"
+bcrypt = ">=4.1.0"
+python-dotenv = ">=1.0.0"
+langchain = ">=0.3.0"
+langchain-openai = ">=0.1.0"
+langgraph = ">=0.2.0"
+pinecone-client = ">=5.0.0"
+chromadb = ">=0.4.0"
+httpx = ">=0.27.0"
+pydantic = ">=2.0.0"
+pydantic-settings = ">=2.0.0"
+
+[project.group]
+name = "starclass"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.black]
+line-length = 88
+target-version = ["py311"]
+
+[tool.isort]
+profile = "black"
+line_length = 88

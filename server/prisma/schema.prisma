@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                  String            @id @default(cuid())
+  email               String            @unique
+  password            String
+  name                String
+  nickname            String?
+  avatar              String?
+  role                String
+  classId             String?
+  className           String?
+  studentId           String?
+  stars               Int               @default(0)
+  theme               String            @default("default")
+  chatBubbleStyle     String            @default("default")
+  lastNicknameChange  DateTime?
+  lastAvatarChange    DateTime?
+  isMuted             Boolean           @default(false)
+  mutedUntil          DateTime?
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  homeworks           Homework[]        @relation("TeacherHomeworks")
+  submissions         Submission[]
+  studentStats        StudentStats?
+  rewards             Reward[]
+  class               Class?            @relation("ClassMembers", fields: [classId], references: [id])
+  createdClasses      Class[]           @relation("ClassCreator")
+  friendsAsUser1      Friend[]          @relation("FriendUser1")
+  friendsAsUser2      Friend[]          @relation("FriendUser2")
+  sentMessages        ChatMessage[]     @relation("MessageSender")
+  privateMessagesSent PrivateMessage[]  @relation("PrivateMessageSender")
+  privateMessagesReceived PrivateMessage[] @relation("PrivateMessageReceiver")
+  purchases           Purchase[]
+
+  @@map("users")
+}
+
+model Class {
+  id          String          @id @default(cuid())
+  name        String
+  classCode   String          @unique
+  teacherId   String
+  teacher     User            @relation("ClassCreator", fields: [teacherId], references: [id], onDelete: Cascade)
+  students    User[]          @relation("ClassMembers")
+  homeworks   Homework[]
+  chatMessages ChatMessage[]
+  isAllMuted  Boolean         @default(false)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  @@map("classes")
+}
+
+model Homework {
+  id          String      @id @default(cuid())
+  title       String
+  description String
+  dueDate     DateTime
+  subject     String      @default("其他")
+  classId     String?
+  className   String
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  teacherId   String
+  teacher     User        @relation("TeacherHomeworks", fields: [teacherId], references: [id], onDelete: Cascade)
+  class       Class?      @relation(fields: [classId], references: [id], onDelete: Cascade)
+  submissions Submission[]
+
+  @@map("homeworks")
+}
+
+model Submission {
+  id          String      @id @default(cuid())
+  homeworkId  String
+  homework    Homework    @relation(fields: [homeworkId], references: [id], onDelete: Cascade)
+  studentId   String
+  student     User        @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  content     String?
+  imageUrl    String?
+  fileUrl     String?
+  fileName    String?
+  files       String?
+  submittedAt DateTime    @default(now())
+  grade       Int?
+  feedback    String?
+  gradedAt    DateTime?
+  status      String      @default("pending")
+  
+  homeworkCompletion Int?
+  accuracy      Int?
+  participation Int?
+  creativity    Int?
+  teamwork      Int?
+  improvement   Int?
+
+  @@map("submissions")
+}
+
+model StudentStats {
+  id            String   @id @default(cuid())
+  studentId     String   @unique
+  student       User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  homeworkCompletion Int     @default(0)
+  accuracy      Int     @default(0)
+  participation Int     @default(0)
+  creativity    Int     @default(0)
+  teamwork      Int     @default(0)
+  improvement   Int     @default(0)
+  level         Int     @default(1)
+  updatedAt     DateTime @updatedAt
+
+  @@map("student_stats")
+}
+
+model Reward {
+  id        String   @id @default(cuid())
+  studentId String
+  student   User     @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  type      String
+  count     Int      @default(0)
+  awardedAt DateTime @default(now())
+
+  @@map("rewards")
+}
+
+model Friend {
+  id           String   @id @default(cuid())
+  user1Id      String
+  user1        User     @relation("FriendUser1", fields: [user1Id], references: [id], onDelete: Cascade)
+  user2Id      String
+  user2        User     @relation("FriendUser2", fields: [user2Id], references: [id], onDelete: Cascade)
+  status       String   @default("pending") 
+  createdAt    DateTime @default(now())
+
+  @@map("friends")
+}
+
+model ChatMessage {
+  id        String   @id @default(cuid())
+  classId   String
+  class     Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+  senderId  String
+  sender    User     @relation("MessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  content   String?
+  imageUrl  String?
+  createdAt DateTime @default(now())
+
+  @@map("chat_messages")
+}
+
+model PrivateMessage {
+  id        String   @id @default(cuid())
+  senderId  String
+  sender    User     @relation("PrivateMessageSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiverId String
+  receiver   User     @relation("PrivateMessageReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  content   String?
+  imageUrl  String?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("private_messages")
+}
+
+model StoreItem {
+  id          String     @id @default(cuid())
+  name        String
+  description String?
+  type        String
+  price       Int
+  imageUrl    String?
+  isActive    Boolean    @default(true)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+  purchases   Purchase[]
+
+  @@map("store_items")
+}
+
+model Purchase {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  itemId    String
+  item      StoreItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  createdAt DateTime  @default(now())
+
+  @@map("purchases")
+}
