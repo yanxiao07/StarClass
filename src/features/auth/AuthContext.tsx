@@ -27,20 +27,20 @@ const mapUser = (apiUser: any): User => {
     email: apiUser.email,
     name: apiUser.name,
     role: apiUser.role,
-    classId: apiUser.classId,
-    className: apiUser.className,
-    studentId: apiUser.studentId,
-    nickname: apiUser.nickname,
-    avatar: apiUser.avatar,
-    stars: apiUser.stars,
-    theme: apiUser.theme,
-    chatBubbleStyle: apiUser.chatBubbleStyle,
+    classId: apiUser.class_id || apiUser.classId,
+    className: apiUser.className || '',
+    studentId: apiUser.studentId || '',
+    nickname: apiUser.nickname || apiUser.name,
+    avatar: apiUser.avatar || '',
+    stars: apiUser.stars || 0,
+    theme: apiUser.theme || 'default',
+    chatBubbleStyle: apiUser.chatBubbleStyle || 'default',
     lastNicknameChange: apiUser.lastNicknameChange ? new Date(apiUser.lastNicknameChange) : undefined,
     lastAvatarChange: apiUser.lastAvatarChange ? new Date(apiUser.lastAvatarChange) : undefined,
-    isMuted: apiUser.isMuted,
+    isMuted: apiUser.isMuted || false,
     mutedUntil: apiUser.mutedUntil ? new Date(apiUser.mutedUntil) : undefined,
-    createdAt: new Date(apiUser.createdAt),
-    updatedAt: new Date(apiUser.updatedAt),
+    createdAt: apiUser.createdAt ? new Date(apiUser.createdAt) : new Date(),
+    updatedAt: apiUser.updatedAt ? new Date(apiUser.updatedAt) : new Date(),
   };
 };
 
@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const checkAuth = async () => {
     try {
       const response = await authApi.getCurrentUser();
-      setUser(mapUser(response.user));
+      setUser(mapUser(response));
     } catch (error) {
       sessionStorage.removeItem('token');
       setUser(null);
@@ -72,7 +72,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const refreshUser = async () => {
     try {
       const response = await authApi.getCurrentUser();
-      setUser(mapUser(response.user));
+      setUser(mapUser(response));
     } catch (error) {
       console.error('刷新用户信息失败:', error);
     }
@@ -80,8 +80,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (email: string, password: string) => {
     const response = await authApi.login({ email, password });
-    sessionStorage.setItem('token', response.token);
-    setUser(mapUser(response.user));
+    sessionStorage.setItem('token', response.access_token);
+    const userResponse = await authApi.getCurrentUser();
+    setUser(mapUser(userResponse));
   };
 
   const register = async (data: {
@@ -93,8 +94,9 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     studentId?: string;
   }) => {
     const response = await authApi.register(data);
-    sessionStorage.setItem('token', response.token);
-    setUser(mapUser(response.user));
+    sessionStorage.setItem('token', response.access_token);
+    const userResponse = await authApi.getCurrentUser();
+    setUser(mapUser(userResponse));
   };
 
   const logout = () => {

@@ -1,25 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
 import { classApi } from '../../services/class';
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Radar } from 'react-chartjs-2';
-
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-);
 
 interface ClassData {
   id: string;
@@ -44,7 +25,7 @@ const getLevelFromStars = (stars: number) => {
     { level: 5, min: 101, max: 150 },
     { level: 6, min: 151, max: Infinity }
   ];
-  
+
   for (let i = levels.length - 1; i >= 0; i--) {
     if (stars >= levels[i].min) {
       return levels[i].level;
@@ -102,39 +83,7 @@ const TeacherStudents: React.FC = () => {
     return () => clearInterval(interval);
   }, [loadClasses]);
 
-  const getChartData = (stats: any) => ({
-    labels: Object.keys(stats),
-    datasets: [
-      {
-        label: '能力维度',
-        data: Object.values(stats),
-        backgroundColor: 'rgba(102, 126, 234, 0.2)',
-        borderColor: 'rgba(102, 126, 234, 1)',
-        borderWidth: 2,
-        pointBackgroundColor: 'rgba(102, 126, 234, 1)',
-        pointBorderColor: '#fff',
-        pointHoverBackgroundColor: '#fff',
-        pointHoverBorderColor: 'rgba(102, 126, 234, 1)',
-      },
-    ],
-  });
 
-  const chartOptions = {
-    scales: {
-      r: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          stepSize: 20,
-        },
-      },
-    },
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-  };
 
   if (!user) return null;
 
@@ -152,9 +101,9 @@ const TeacherStudents: React.FC = () => {
           <div className="card-header">
             <h2 className="card-title">学生管理</h2>
           </div>
-          
+
           {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
-          
+
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>加载中...</div>
           ) : !hasStudents ? (
@@ -165,7 +114,7 @@ const TeacherStudents: React.FC = () => {
             sortedClasses.map((cls) => {
               const students = cls.students || [];
               if (students.length === 0) return null;
-              
+
               const sortedStudents = getSortedStudents(students).map((s: any) => ({
                 ...s,
                 className: cls.name,
@@ -181,11 +130,11 @@ const TeacherStudents: React.FC = () => {
                   '进步速度': s.studentStats?.improvement || 0
                 }
               }));
-              
+
               return (
                 <div key={cls.id} style={{ marginBottom: '2rem' }}>
-                  <h3 style={{ 
-                    marginBottom: '1rem', 
+                  <h3 style={{
+                    marginBottom: '1rem',
                     color: '#2d3748',
                     borderBottom: '2px solid #667eea',
                     paddingBottom: '0.5rem'
@@ -275,10 +224,31 @@ const TeacherStudents: React.FC = () => {
 
             <div className="card">
               <div className="card-header">
-                <h3 className="card-title">能力六芒星图</h3>
+                <h3 className="card-title">能力维度</h3>
               </div>
-              <div className="chart-container">
-                <Radar data={getChartData(selectedStudent.stats)} options={chartOptions} />
+              <div style={{ padding: '1rem' }}>
+                {Object.entries(selectedStudent.stats).map(([key, value]) => {
+                  const numValue = Number(value);
+                  return (
+                    <div key={key} style={{ marginBottom: '1rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                        <span style={{ color: '#374151' }}>{key}</span>
+                        <span style={{ color: '#6b7280' }}>{numValue}%</span>
+                      </div>
+                      <div style={{ height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                        <div
+                          style={{
+                            height: '100%',
+                            width: `${numValue}%`,
+                            backgroundColor: '#667eea',
+                            borderRadius: '4px',
+                            transition: 'width 0.3s ease',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           </div>

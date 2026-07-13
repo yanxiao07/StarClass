@@ -16,13 +16,22 @@ interface LoginData {
 }
 
 interface AuthResponse {
-  token: string;
-  user: {
-    id: string;
-    email: string;
-    name: string;
-    role: UserRole;
-  };
+  access_token: string;
+  refresh_token: string;
+  token_type: string;
+  user_id: string;
+  role: UserRole;
+}
+
+interface UserResponse {
+  id: string;
+  email: string;
+  name: string;
+  nickname: string;
+  role: UserRole;
+  class_id: string | null;
+  stars: number;
+  level: number;
 }
 
 export const authApi = {
@@ -34,8 +43,8 @@ export const authApi = {
     return apiClient.post<AuthResponse>('/api/auth/login', data);
   },
 
-  async getCurrentUser(): Promise<{ user: AuthResponse['user'] }> {
-    return apiClient.get('/api/auth/me');
+  async getCurrentUser(): Promise<UserResponse> {
+    return apiClient.get<UserResponse>('/api/auth/me');
   },
 
   async uploadAvatar(file: File): Promise<{ user: any; avatarUrl: string }> {

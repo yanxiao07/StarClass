@@ -5,25 +5,6 @@ import { apiClient } from '../../services/client';
 import { submissionApi } from '../../services/submission';
 import { userApi, StudentStats } from '../../services/user';
 import { useNavigate } from 'react-router-dom';
-import { Radar } from 'react-chartjs-2';
-import {
-  Chart as ChartJS,
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-
-ChartJS.register(
-  RadialLinearScale,
-  PointElement,
-  LineElement,
-  Filler,
-  Tooltip,
-  Legend
-);
 
 const getLevelFromStars = (stars: number): { level: number; starsNeededForNext: number; currentLevelStars: number; nextLevelStars: number } => {
   const levels = [
@@ -39,7 +20,7 @@ const getLevelFromStars = (stars: number): { level: number; starsNeededForNext: 
     { level: 9, min: 1201, max: 1800 },
     { level: 10, min: 1801, max: Infinity },
   ];
-  
+
   for (let i = 0; i < levels.length; i++) {
     if (stars >= levels[i].min && stars <= levels[i].max) {
       const nextLevel = levels[i + 1];
@@ -52,7 +33,7 @@ const getLevelFromStars = (stars: number): { level: number; starsNeededForNext: 
       };
     }
   }
-  
+
   return { level: 10, starsNeededForNext: 0, currentLevelStars: 1801, nextLevelStars: Infinity };
 };
 
@@ -88,10 +69,10 @@ const StudentDashboard: React.FC = () => {
           submissionApi.getSubmissions(),
           userApi.getMyStats()
         ]);
-        
+
         let pending = 0;
         let completed = 0;
-        
+
         homeworks.forEach((hw) => {
           const hasSubmitted = submissions.some((s) => s.homeworkId === hw.id);
           if (hasSubmitted) {
@@ -102,7 +83,7 @@ const StudentDashboard: React.FC = () => {
         });
 
         const levelInfo = getLevelFromStars(user.stars || 0);
-        
+
         setStats(prev => ({
           ...prev,
           pendingHomeworks: pending,
@@ -145,10 +126,10 @@ const StudentDashboard: React.FC = () => {
 
   const handleJoinClass = async () => {
     if (!classCode.trim()) return;
-    
+
     setLoading(true);
     setError('');
-    
+
     try {
       await classApi.joinClass(classCode.trim().toUpperCase());
       setClassCode('');
@@ -165,37 +146,14 @@ const StudentDashboard: React.FC = () => {
     navigate('/level');
   };
 
-  const chartData = {
-    labels: ['作业完成度', '正确率', '参与度', '创新思维', '团队协作', '进步速度'],
-    datasets: [
-      {
-        label: '能力维度',
-        data: [
-          studentStats?.homeworkCompletion || 0,
-          studentStats?.accuracy || 0,
-          studentStats?.participation || 0,
-          studentStats?.creativity || 0,
-          studentStats?.teamwork || 0,
-          studentStats?.improvement || 0
-        ],
-        backgroundColor: 'rgba(75, 192, 192, 0.2)',
-        borderColor: 'rgba(75, 192, 192, 1)',
-        borderWidth: 2,
-      },
-    ],
-  };
-
-  const chartOptions = {
-    scales: {
-      r: {
-        beginAtZero: true,
-        max: 100,
-        ticks: {
-          stepSize: 20,
-        },
-      },
-    },
-  };
+  const abilityStats = [
+    { name: '作业完成度', value: studentStats?.homeworkCompletion || 0 },
+    { name: '正确率', value: studentStats?.accuracy || 0 },
+    { name: '参与度', value: studentStats?.participation || 0 },
+    { name: '创新思维', value: studentStats?.creativity || 0 },
+    { name: '团队协作', value: studentStats?.teamwork || 0 },
+    { name: '进步速度', value: studentStats?.improvement || 0 },
+  ];
 
   if (!user) return null;
 
@@ -236,8 +194,8 @@ const StudentDashboard: React.FC = () => {
               </div>
               <div className="modal-footer">
                 <button className="btn" onClick={() => setShowJoinClass(false)}>取消</button>
-                <button 
-                  className="btn btn-primary" 
+                <button
+                  className="btn btn-primary"
                   onClick={handleJoinClass}
                   disabled={loading || classCode.trim().length < 4}
                 >
@@ -279,14 +237,30 @@ const StudentDashboard: React.FC = () => {
         </div>
       </div>
 
-      <div className="grid grid-2">
-        <div className="card">
-          <div className="card-header">
-            <h3 className="card-title">能力维度</h3>
-          </div>
-          <div style={{ height: '300px' }}>
-            <Radar data={chartData} options={chartOptions} />
-          </div>
+      <div className="card">
+        <div className="card-header">
+          <h3 className="card-title">能力维度</h3>
+        </div>
+        <div style={{ padding: '1rem' }}>
+          {abilityStats.map((stat) => (
+            <div key={stat.name} style={{ marginBottom: '1rem' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
+                <span style={{ color: '#374151' }}>{stat.name}</span>
+                <span style={{ color: '#6b7280' }}>{stat.value}%</span>
+              </div>
+              <div style={{ height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                <div
+                  style={{
+                    height: '100%',
+                    width: `${stat.value}%`,
+                    backgroundColor: '#10b981',
+                    borderRadius: '4px',
+                    transition: 'width 0.3s ease',
+                  }}
+                />
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

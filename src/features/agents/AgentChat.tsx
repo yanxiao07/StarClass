@@ -64,10 +64,10 @@ const AgentChat: React.FC = () => {
     setInputMessage('');
 
     try {
-      const response = await apiClient.post(`/api/agents/${selectedAgent.id}/chat`, {
+      const response: { conversation_id?: string; response?: string } = await apiClient.post(`/api/agents/${selectedAgent.id}/chat`, {
         message: inputMessage,
         conversation_id: conversationId,
-        class_id: user.class_id,
+        class_id: user.classId,
       });
 
       if (response.conversation_id) {
@@ -126,10 +126,10 @@ const AgentChat: React.FC = () => {
 
   return (
     <div className="agent-chat-container" style={{ display: 'flex', height: 'calc(100vh - 80px)', gap: '20px' }}>
-      <div 
-        style={{ 
-          width: '280px', 
-          background: '#1a1a2e', 
+      <div
+        style={{
+          width: '280px',
+          background: '#1a1a2e',
           borderRadius: '16px',
           padding: '20px',
           overflowY: 'auto'
@@ -165,10 +165,10 @@ const AgentChat: React.FC = () => {
         </div>
       </div>
 
-      <div 
-        style={{ 
-          flex: 1, 
-          background: '#1a1a2e', 
+      <div
+        style={{
+          flex: 1,
+          background: '#1a1a2e',
           borderRadius: '16px',
           display: 'flex',
           flexDirection: 'column',
@@ -177,9 +177,9 @@ const AgentChat: React.FC = () => {
       >
         {selectedAgent ? (
           <>
-            <div 
-              style={{ 
-                padding: '20px', 
+            <div
+              style={{
+                padding: '20px',
                 background: getAgentColor(selectedAgent.type),
                 display: 'flex',
                 alignItems: 'center',
@@ -193,10 +193,10 @@ const AgentChat: React.FC = () => {
               </div>
             </div>
 
-            <div 
-              style={{ 
-                flex: 1, 
-                overflowY: 'auto', 
+            <div
+              style={{
+                flex: 1,
+                overflowY: 'auto',
                 padding: '20px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -244,9 +244,9 @@ const AgentChat: React.FC = () => {
               <div ref={messagesEndRef} />
             </div>
 
-            <div 
-              style={{ 
-                padding: '20px', 
+            <div
+              style={{
+                padding: '20px',
                 borderTop: '1px solid rgba(255,255,255,0.1)',
                 background: 'rgba(0,0,0,0.2)'
               }}

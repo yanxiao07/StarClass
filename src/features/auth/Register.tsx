@@ -69,11 +69,13 @@ const Register: React.FC = () => {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="请输入您的真实姓名（老师将根据此识别您）"
+              placeholder={role === 'student' ? '请输入您的真实姓名（老师将根据此识别您）' : '请输入您的真实姓名'}
             />
-            <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.5rem' }}>
-              请务必填写真实姓名，否则老师可能会将您移出班级
-            </p>
+            {role === 'student' && (
+              <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.5rem' }}>
+                请务必填写真实姓名，否则老师可能会将您移出班级
+              </p>
+            )}
           </div>
           
           <div className="form-group">

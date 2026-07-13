@@ -9,7 +9,7 @@ export const FloatingObjects = ({ canvasRef }: FloatingObjectsProps) => {
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
-  const objectsRef = useRef<THREE.Mesh[]>([]);
+  const objectsRef = useRef<THREE.Object3D[]>([]);
   const animationIdRef = useRef<number>(0);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export const FloatingObjects = ({ canvasRef }: FloatingObjectsProps) => {
     renderer.setPixelRatio(window.devicePixelRatio);
     rendererRef.current = renderer;
 
-    const objects: THREE.Mesh[] = [];
+    const objects: THREE.Object3D[] = [];
 
     const createBook = () => {
       const group = new THREE.Group();
