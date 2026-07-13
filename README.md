@@ -412,25 +412,29 @@ DELETE /api/homeworks/{id}
 
 ### 登录页面
 
-![Login Page](https://raw.githubusercontent.com/yanxiao07/StarClass/main/docs/screenshots/login.png)
+![Login Page](docs/screenshots/login-page.png)
+
+### 注册页面
+
+![Register Page](docs/screenshots/register-page.png)
 
 ### 学生工作台
 
-![Student Dashboard](https://raw.githubusercontent.com/yanxiao07/StarClass/main/docs/screenshots/student-dashboard.png)
+![Student Dashboard](docs/screenshots/student-dashboard.png)
 
 ### 智能体对话
 
-![Agent Chat](https://raw.githubusercontent.com/yanxiao07/StarClass/main/docs/screenshots/agent-chat.png)
+![Agent Chat](docs/screenshots/agent-chat.png)
 
 ### 作业管理
 
-![Homework Management](https://raw.githubusercontent.com/yanxiao07/StarClass/main/docs/screenshots/homework-management.png)
+![Homework Management](docs/screenshots/homework-management.png)
 
 ### 3D 教室场景
 
-![Classroom Scene](https://raw.githubusercontent.com/yanxiao07/StarClass/main/docs/screenshots/classroom-scene.png)
+![Classroom Scene](docs/screenshots/classroom-scene.png)
 
-> **说明**：截图目录 `docs/screenshots/` 待补充实际截图。
+> **说明**：部分页面截图待补充，已有的截图已上传到仓库。
 
 ---
 
