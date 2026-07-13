@@ -5,7 +5,7 @@ class Settings(BaseSettings):
     PROJECT_NAME: str = "StarClass AI Agent Platform"
     VERSION: str = "0.1.0"
     
-    DATABASE_URL: str = "mysql+pymysql://root:password@localhost:3306/starclass"
+    DATABASE_URL: str = "sqlite:///./starclass.db"
     
     SECRET_KEY: str = "your-secret-key-here-change-in-production"
     ALGORITHM: str = "HS256"

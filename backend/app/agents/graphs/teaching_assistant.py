@@ -1,8 +1,8 @@
 from typing import TypedDict, List, Dict, Any, Optional
-from langchain_core.messages import BaseMessage, HumanMessage, AIMessage
+from langchain_core.messages import BaseMessage, HumanMessage, AIMessage, ToolMessage
 from langchain_openai import ChatOpenAI
 from langgraph.graph import StateGraph, END
-from langgraph.prebuilt import ToolExecutor
+from langgraph.prebuilt import ToolNode
 from app.agents.tools import KnowledgeSearchTool, HomeworkTool
 
 class TeachingAssistantState(TypedDict):
@@ -30,14 +30,15 @@ class TeachingAssistantGraph:
             KnowledgeSearchTool(db=db),
             HomeworkTool(db=db),
         ]
-        self.tool_executor = ToolExecutor(self.tools)
+        self.tool_node = ToolNode(self.tools)
+        self.llm_with_tools = self.llm.bind_tools(self.tools)
         self.graph = self._build_graph()
     
     def _build_graph(self):
         workflow = StateGraph(TeachingAssistantState)
         
         workflow.add_node("call_agent", self._call_agent)
-        workflow.add_node("execute_tool", self._execute_tool)
+        workflow.add_node("execute_tool", self.tool_node)
         workflow.add_node("summarize", self._summarize)
         
         workflow.set_entry_point("call_agent")
@@ -59,7 +60,7 @@ class TeachingAssistantGraph:
     async def _call_agent(self, state: TeachingAssistantState) -> TeachingAssistantState:
         messages = state["messages"]
         
-        response = self.llm.invoke(messages)
+        response = await self.llm_with_tools.ainvoke(messages)
         messages.append(response)
         
         return {
@@ -73,27 +74,6 @@ class TeachingAssistantGraph:
             return "tool"
         return "finish"
     
-    async def _execute_tool(self, state: TeachingAssistantState) -> TeachingAssistantState:
-        last_message = state["messages"][-1]
-        
-        if isinstance(last_message, AIMessage) and last_message.tool_calls:
-            results = await self.tool_executor.ainvoke(last_message.tool_calls)
-            state["tool_results"].extend(results)
-            
-            tool_messages = [
-                {"role": "tool", "content": str(result), "tool_call_id": tc["id"]}
-                for tc, result in zip(last_message.tool_calls, results)
-            ]
-            state["messages"].extend(tool_messages)
-        
-        return state
-    
-    async def _summarize(self, state: TeachingAssistantState) -> TeachingAssistantState:
-        return {
-            **state,
-            "is_complete": True,
-        }
-    
     async def grade_homework(self, submission, homework) -> Dict[str, Any]:
         prompt = f"""请批改以下作业：
 
@@ -106,7 +86,7 @@ class TeachingAssistantGraph:
 2. 详细的反馈意见
 3. 改进建议"""
         
-        response = self.llm.invoke([{"role": "user", "content": prompt}])
+        response = await self.llm.ainvoke([{"role": "user", "content": prompt}])
         
         try:
             result = response.content
