@@ -11,7 +11,7 @@ const getImageUrl = (url: string | null) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  return `http://localhost:3001${url}`;
+  return `${import.meta.env.VITE_API_URL || ''}${url}`;
 };
 
 interface Message {
@@ -78,7 +78,7 @@ const AIChat: React.FC = () => {
           content: input
         })
       });
-      
+
       const aiMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: 'assistant',
@@ -121,9 +121,9 @@ const AIChat: React.FC = () => {
 
         <div className="chat-messages">
           {messages.length === 0 && (
-            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#6b7280' }}>
+            <div style={{ textAlign: 'center', padding: '3rem 1rem', color: '#64748b' }}>
               <div style={{ fontSize: '48px', marginBottom: '1rem' }}>👋</div>
-              <h3 style={{ marginBottom: '0.5rem', color: '#374151', fontSize: '1.125rem', fontWeight: 500 }}>
+              <h3 style={{ marginBottom: '0.5rem', color: '#0f172a', fontSize: '1.125rem', fontWeight: 500 }}>
                 嗨，我是你的AI学习助手！
               </h3>
               <p style={{ fontSize: '0.875rem' }}>
@@ -131,9 +131,9 @@ const AIChat: React.FC = () => {
               </p>
             </div>
           )}
-          
+
           {error && <div className="error-message">{error}</div>}
-          
+
           {messages.map((msg) => (
             <div key={msg.id} className={`message ${msg.role}`}>
               <div className="message-avatar">
@@ -155,7 +155,7 @@ const AIChat: React.FC = () => {
               <div className="message-content">
                 <div className={`message-bubble ${msg.role === 'user' ? bubbleClass : ''}`}>
                   {msg.role === 'assistant' ? (
-                    <ReactMarkdown 
+                    <ReactMarkdown
                       remarkPlugins={[remarkGfm]}
                       components={{
                         code({ node, inline, className, children, ...props }: any) {
@@ -190,7 +190,7 @@ const AIChat: React.FC = () => {
               </div>
             </div>
           ))}
-          
+
           {isTyping && (
             <div className="message assistant">
               <div className="message-avatar">🤖</div>

@@ -107,7 +107,7 @@ const TeacherStudents: React.FC = () => {
           {loading ? (
             <div style={{ textAlign: 'center', padding: '2rem' }}>加载中...</div>
           ) : !hasStudents ? (
-            <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+            <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
               暂无学生，请先创建班级并邀请学生加入
             </div>
           ) : (
@@ -135,8 +135,8 @@ const TeacherStudents: React.FC = () => {
                 <div key={cls.id} style={{ marginBottom: '2rem' }}>
                   <h3 style={{
                     marginBottom: '1rem',
-                    color: '#2d3748',
-                    borderBottom: '2px solid #667eea',
+                    color: '#0f172a',
+                    borderBottom: '2px solid #2563eb',
                     paddingBottom: '0.5rem'
                   }}>
                     {cls.name} ({sortedStudents.length} 名学生)
@@ -232,15 +232,15 @@ const TeacherStudents: React.FC = () => {
                   return (
                     <div key={key} style={{ marginBottom: '1rem' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                        <span style={{ color: '#374151' }}>{key}</span>
-                        <span style={{ color: '#6b7280' }}>{numValue}%</span>
+                        <span style={{ color: '#0f172a' }}>{key}</span>
+                        <span style={{ color: '#64748b' }}>{numValue}%</span>
                       </div>
-                      <div style={{ height: '8px', backgroundColor: '#e5e7eb', borderRadius: '4px', overflow: 'hidden' }}>
+                      <div style={{ height: '8px', backgroundColor: '#f1f5f9', borderRadius: '4px', overflow: 'hidden' }}>
                         <div
                           style={{
                             height: '100%',
                             width: `${numValue}%`,
-                            backgroundColor: '#667eea',
+                            backgroundColor: '#2563eb',
                             borderRadius: '4px',
                             transition: 'width 0.3s ease',
                           }}

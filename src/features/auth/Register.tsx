@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { UserRole } from '../../types';
 import { useAuth } from './AuthContext';
-import StarDecoration from '../../components/StarDecoration';
+import Icon from '../../components/Icon';
 import '../../styles/Auth.css';
 
 const Register: React.FC = () => {
@@ -51,16 +51,23 @@ const Register: React.FC = () => {
 
   return (
     <div className="auth-container">
-      <StarDecoration />
       <div className="auth-card">
         <div className="auth-header">
-          <h1>⭐ 星学园</h1>
+          <h1>
+            <Icon name="star" size={32} color="#f59e0b" />
+            星学园
+          </h1>
           <p>创建新账户，开始使用</p>
         </div>
-        
+
         <form onSubmit={handleSubmit} className="auth-form">
-          {error && <div className="error-message">{error}</div>}
-          
+          {error && (
+            <div className="error-message">
+              <Icon name="warning" size={16} />
+              {error}
+            </div>
+          )}
+
           <div className="form-group">
             <label className="form-label">姓名 <span style={{ color: '#ef4444' }}>*</span></label>
             <input
@@ -72,12 +79,12 @@ const Register: React.FC = () => {
               placeholder={role === 'student' ? '请输入您的真实姓名（老师将根据此识别您）' : '请输入您的真实姓名'}
             />
             {role === 'student' && (
-              <p style={{ fontSize: '0.8rem', color: '#718096', marginTop: '0.5rem' }}>
+              <p style={{ fontSize: '0.8rem', color: '#64748b', marginTop: '0.5rem' }}>
                 请务必填写真实姓名，否则老师可能会将您移出班级
               </p>
             )}
           </div>
-          
+
           <div className="form-group">
             <label className="form-label">邮箱</label>
             <input
@@ -89,19 +96,29 @@ const Register: React.FC = () => {
               placeholder="请输入您的邮箱"
             />
           </div>
-          
+
           <div className="form-group">
-            <label className="form-label">身份</label>
-            <select
-              className="form-select"
-              value={role}
-              onChange={(e) => setRole(e.target.value as UserRole)}
-            >
-              <option value="student">学生</option>
-              <option value="teacher">教师</option>
-            </select>
+            <label className="form-label">身份选择</label>
+            <div className="role-selector">
+              <button
+                type="button"
+                className={`role-btn ${role === 'student' ? 'active' : ''}`}
+                onClick={() => setRole('student')}
+              >
+                <Icon name="student" size={28} />
+                <span>学生</span>
+              </button>
+              <button
+                type="button"
+                className={`role-btn ${role === 'teacher' ? 'active' : ''}`}
+                onClick={() => setRole('teacher')}
+              >
+                <Icon name="users" size={28} />
+                <span>教师</span>
+              </button>
+            </div>
           </div>
-          
+
           {role === 'student' && (
             <div className="form-group">
               <label className="form-label">学号</label>
@@ -115,7 +132,7 @@ const Register: React.FC = () => {
               />
             </div>
           )}
-          
+
           <div className="form-group">
             <label className="form-label">密码</label>
             <input
@@ -127,7 +144,7 @@ const Register: React.FC = () => {
               placeholder="请输入密码（至少6位）"
             />
           </div>
-          
+
           <div className="form-group">
             <label className="form-label">确认密码</label>
             <input
@@ -139,12 +156,20 @@ const Register: React.FC = () => {
               placeholder="请再次输入密码"
             />
           </div>
-          
+
           <button type="submit" className="btn btn-primary" disabled={loading}>
-            {loading ? '注册中...' : '注册'}
+            {loading ? (
+              <>
+                <Icon name="loading" size={16} spin /> 注册中...
+              </>
+            ) : (
+              <>
+                <Icon name="check" size={16} /> 注册
+              </>
+            )}
           </button>
         </form>
-        
+
         <div className="auth-footer">
           <p>已有账户？ <Link to="/login">立即登录</Link></p>
         </div>

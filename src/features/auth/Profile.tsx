@@ -8,7 +8,7 @@ const getImageUrl = (url: string | null) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  return `http://localhost:3001${url}`;
+  return `${import.meta.env.VITE_API_URL || ''}${url}`;
 };
 
 const Profile: React.FC = () => {

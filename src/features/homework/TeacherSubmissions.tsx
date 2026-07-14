@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { submissionApi, Submission } from '../../services/submission';
 import { userApi } from '../../services/user';
 import { useSearchParams } from 'react-router-dom';
+import { homeworkApi } from '../../services/homework';
 import { apiClient } from '../../services/client';
 
 const getImageUrl = (url: string | null) => {
@@ -10,7 +11,7 @@ const getImageUrl = (url: string | null) => {
   if (url.startsWith('http://') || url.startsWith('https://')) {
     return url;
   }
-  return `http://localhost:3001${url}`;
+  return `${url}`;
 };
 
 const formatFileSize = (bytes: number) => {
@@ -50,11 +51,13 @@ const TeacherSubmissions: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [grading, setGrading] = useState(false);
   const [rewarding, setRewarding] = useState(false);
+  const [aiGrading, setAiGrading] = useState(false);
+  const [aiFeedback, setAiFeedback] = useState('');
   const [error, setError] = useState('');
 
   const loadHomeworks = async () => {
     try {
-      const data = await apiClient.get<Homework[]>('/api/homework');
+      const data = await homeworkApi.getHomeworks();
       setHomeworks(data);
     } catch (err: any) {
       console.error('加载作业列表失败:', err);
@@ -85,26 +88,73 @@ const TeacherSubmissions: React.FC = () => {
   const handleDownload = async (file: any) => {
     try {
       const url = getImageUrl(file.url);
-      
+
       const response = await fetch(url);
       if (!response.ok) {
         throw new Error('下载失败');
       }
-      
+
       const blob = await response.blob();
       const blobUrl = window.URL.createObjectURL(blob);
-      
+
       const link = document.createElement('a');
       link.href = blobUrl;
       link.download = file.name;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      
+
       window.URL.revokeObjectURL(blobUrl);
     } catch (error) {
       console.error('下载失败:', error);
       alert('下载失败，请重试');
+    }
+  };
+
+  const handleAIGrade = async (submission: Submission) => {
+    if (!submission || aiGrading) return;
+
+    setAiGrading(true);
+    setAiFeedback('');
+    setError('');
+    try {
+      const result = await apiClient.post<{
+        grade?: number;
+        feedback?: string;
+        homeworkCompletion?: number;
+        accuracy?: number;
+        participation?: number;
+        creativity?: number;
+        teamwork?: number;
+        improvement?: number;
+      }>(`/api/submissions/${submission.id}/ai-grade`);
+
+      if (result.grade !== undefined && result.grade !== null) {
+        setGrade(result.grade.toString());
+      }
+      if (result.feedback) {
+        setFeedback(result.feedback);
+        setAiFeedback(result.feedback);
+      }
+      setAbilityScores({
+        homeworkCompletion: result.homeworkCompletion?.toString() || '',
+        accuracy: result.accuracy?.toString() || '',
+        participation: result.participation?.toString() || '',
+        creativity: result.creativity?.toString() || '',
+        teamwork: result.teamwork?.toString() || '',
+        improvement: result.improvement?.toString() || ''
+      });
+
+      // 若在列表中触发，且当前未选中该提交，则进入批改面板以展示结果
+      if (!selectedSubmission || selectedSubmission.id !== submission.id) {
+        setSelectedSubmission(submission);
+      }
+
+      alert('AI批改完成，请确认后提交！');
+    } catch (err: any) {
+      setError(err.message || 'AI批改失败');
+    } finally {
+      setAiGrading(false);
     }
   };
 
@@ -192,7 +242,7 @@ const TeacherSubmissions: React.FC = () => {
             {loading ? (
               <div style={{ textAlign: 'center', padding: '2rem' }}>加载中...</div>
             ) : submissions.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                 暂无待批改的作业
               </div>
             ) : (
@@ -226,6 +276,28 @@ const TeacherSubmissions: React.FC = () => {
                     {sub.grade && (
                       <span className="grade-display">{sub.grade}分</span>
                     )}
+                    {sub.status !== 'graded' && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleAIGrade(sub);
+                        }}
+                        disabled={aiGrading}
+                        style={{
+                          padding: '0.35rem 0.75rem',
+                          fontSize: '0.8rem',
+                          color: '#fff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: aiGrading ? 'not-allowed' : 'pointer',
+                          background: '#2563eb',
+                          opacity: aiGrading ? 0.6 : 1
+                        }}
+                      >
+                        {aiGrading ? 'AI批改中...' : 'AI批改'}
+                      </button>
+                    )}
                   </div>
                 </div>
               ))
@@ -239,6 +311,7 @@ const TeacherSubmissions: React.FC = () => {
                 setSelectedSubmission(null);
                 setGrade('');
                 setFeedback('');
+                setAiFeedback('');
               }}
               style={{ marginBottom: '1.5rem' }}
             >
@@ -255,16 +328,16 @@ const TeacherSubmissions: React.FC = () => {
                 <div className="submission-content">
                   {selectedSubmission.content && (
                     <div style={{ marginBottom: '1.5rem' }}>
-                      <h4 style={{ marginBottom: '0.5rem', color: '#2d3748' }}>作业内容</h4>
-                      <p style={{ color: '#4a5568', whiteSpace: 'pre-wrap' }}>
+                      <h4 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>作业内容</h4>
+                      <p style={{ color: '#334155', whiteSpace: 'pre-wrap' }}>
                         {selectedSubmission.content}
                       </p>
                     </div>
                   )}
-                  
+
                   {selectedSubmission.imageUrl && (
                     <div style={{ marginBottom: '1.5rem' }}>
-                      <h4 style={{ marginBottom: '0.5rem', color: '#2d3748' }}>提交图片</h4>
+                      <h4 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>提交图片</h4>
                       <img
                         src={getImageUrl(selectedSubmission.imageUrl)}
                         alt="作业"
@@ -272,10 +345,10 @@ const TeacherSubmissions: React.FC = () => {
                       />
                     </div>
                   )}
-                  
+
                   {selectedSubmission.files && selectedSubmission.files.length > 0 && (
                     <div style={{ marginBottom: '1.5rem' }}>
-                      <h4 style={{ marginBottom: '0.5rem', color: '#2d3748' }}>
+                      <h4 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>
                         附件 ({selectedSubmission.files.length} 个文件)
                       </h4>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
@@ -286,7 +359,7 @@ const TeacherSubmissions: React.FC = () => {
                               key={index}
                               style={{
                                 padding: '1rem',
-                                background: '#f7fafc',
+                                background: '#f1f5f9',
                                 borderRadius: '8px',
                                 border: '1px solid #e2e8f0',
                                 display: 'flex',
@@ -299,10 +372,10 @@ const TeacherSubmissions: React.FC = () => {
                                   {isImage ? '🖼️' : '📎'}
                                 </span>
                                 <div>
-                                  <div style={{ fontWeight: 500, color: '#2d3748' }}>
+                                  <div style={{ fontWeight: 500, color: '#0f172a' }}>
                                     {file.name}
                                   </div>
-                                  <div style={{ fontSize: '0.875rem', color: '#718096' }}>
+                                  <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
                                     {formatFileSize(file.size)}
                                   </div>
                                 </div>
@@ -333,9 +406,9 @@ const TeacherSubmissions: React.FC = () => {
                       </div>
                     </div>
                   )}
-                  
+
                   {!selectedSubmission.content && !selectedSubmission.imageUrl && (!selectedSubmission.files || selectedSubmission.files.length === 0) && (
-                    <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+                    <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
                       无提交内容
                     </div>
                   )}
@@ -371,7 +444,7 @@ const TeacherSubmissions: React.FC = () => {
                 </div>
 
                 <div style={{ marginBottom: '1.5rem' }}>
-                  <h4 style={{ marginBottom: '1rem', color: '#2d3748' }}>能力维度打分 (0-100)</h4>
+                  <h4 style={{ marginBottom: '1rem', color: '#0f172a' }}>能力维度打分 (0-100)</h4>
                   <div className="grid grid-2">
                     <div className="form-group">
                       <label className="form-label">作业完成度</label>
@@ -449,7 +522,7 @@ const TeacherSubmissions: React.FC = () => {
                 </div>
 
                 <div className="reward-section">
-                  <h4 style={{ marginBottom: '1rem', color: '#2d3748' }}>奖励</h4>
+                  <h4 style={{ marginBottom: '1rem', color: '#0f172a' }}>奖励</h4>
                   <div className="reward-buttons">
                     <button
                       className="btn btn-secondary"
@@ -475,11 +548,53 @@ const TeacherSubmissions: React.FC = () => {
                   </div>
                 </div>
 
+                {aiFeedback && (
+                  <div
+                    style={{
+                      marginTop: '1.5rem',
+                      padding: '1rem',
+                      borderRadius: '8px',
+                      background: 'rgba(37,99,235,0.08)',
+                      border: '1px solid rgba(37,99,235,0.3)',
+                      color: '#0f172a'
+                    }}
+                  >
+                    <div style={{ fontWeight: 600, marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                      <span>🤖</span>
+                      <span>AI 反馈已应用</span>
+                    </div>
+                    <div style={{ fontSize: '0.875rem', color: '#334155', whiteSpace: 'pre-wrap' }}>
+                      {aiFeedback}
+                    </div>
+                  </div>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => selectedSubmission && handleAIGrade(selectedSubmission)}
+                  disabled={aiGrading || grading}
+                  style={{
+                    marginTop: '1.5rem',
+                    width: '100%',
+                    padding: '0.75rem 1rem',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    cursor: aiGrading || grading ? 'not-allowed' : 'pointer',
+                    background: '#2563eb',
+                    opacity: aiGrading || grading ? 0.6 : 1,
+                    fontWeight: 600,
+                    fontSize: '0.95rem'
+                  }}
+                >
+                  {aiGrading ? 'AI智能批改中...' : '🤖 AI智能批改'}
+                </button>
+
                 <button
                   className="btn btn-success"
                   onClick={handleGrade}
-                  disabled={grading}
-                  style={{ marginTop: '1.5rem', width: '100%' }}
+                  disabled={grading || aiGrading}
+                  style={{ marginTop: '0.75rem', width: '100%' }}
                 >
                   {grading ? '提交中...' : '提交批改'}
                 </button>

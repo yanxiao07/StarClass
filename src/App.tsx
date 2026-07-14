@@ -17,8 +17,11 @@ import Games from './features/games';
 import AIChat from './features/games/AIChat';
 import StarStore from './features/store/StarStore';
 import AgentChat from './features/agents/AgentChat';
+import LLMSettings from './features/settings/LLMSettings';
 import './styles/Minimal.css';
 import StarDecoration from './components/StarDecoration';
+import Icon from './components/Icon';
+import { ThreeDBackground } from './components/three';
 import { classApi } from './services/class';
 import { chatApi } from './services/chat';
 
@@ -122,6 +125,7 @@ const Navbar: React.FC = () => {
   const renderClassLink = () => {
     return (
       <a href="/classes" style={{ position: 'relative', display: 'inline-flex', alignItems: 'center' }}>
+        <Icon name="class" size={16} />
         班级
         {newMessagesCount > 0 && (
           <span style={{
@@ -135,7 +139,8 @@ const Navbar: React.FC = () => {
             padding: '2px 6px',
             borderRadius: '10px',
             minWidth: '18px',
-            textAlign: 'center'
+            textAlign: 'center',
+            boxShadow: '0 2px 8px rgba(239, 68, 68, 0.4)',
           }}>
             {newMessagesCount > 99 ? '99+' : newMessagesCount}
           </span>
@@ -146,17 +151,20 @@ const Navbar: React.FC = () => {
 
   return (
     <nav className="navbar">
-      <div className="nav-brand">⭐ 星学园</div>
+      <div className="nav-brand">
+        <Icon name="star" size={22} color="#2563eb" />
+        星学园
+      </div>
       <div className="nav-links">
         {user.role === 'student' && !isStudentWithoutClass && (
           <>
-            <a href="/">首页</a>
-            <a href="/homework">作业</a>
+            <a href="/"><Icon name="home" size={16} />首页</a>
+            <a href="/homework"><Icon name="homework" size={16} />作业</a>
             {renderClassLink()}
-            <a href="/games">游戏</a>
-            <a href="/ai-chat">AI助手</a>
-            <a href="/agents">智能体</a>
-            <a href="/store">商城</a>
+            <a href="/games"><Icon name="game" size={16} />游戏</a>
+            <a href="/ai-chat"><Icon name="robot" size={16} />AI助手</a>
+            <a href="/agents"><Icon name="agent" size={16} />智能体</a>
+            <a href="/store"><Icon name="store" size={16} />商城</a>
           </>
         )}
         {user.role === 'student' && isStudentWithoutClass && (
@@ -166,14 +174,16 @@ const Navbar: React.FC = () => {
         )}
         {user.role === 'teacher' && (
           <>
-            <a href="/">首页</a>
-            <a href="/homework">作业</a>
-            <a href="/students">学生</a>
+            <a href="/"><Icon name="home" size={16} />首页</a>
+            <a href="/homework"><Icon name="homework" size={16} />作业</a>
+            <a href="/students"><Icon name="student" size={16} />学生</a>
             {renderClassLink()}
+            <a href="/agents"><Icon name="agent" size={16} />智能体</a>
+            <a href="/llm-settings"><Icon name="settings" size={16} />AI配置</a>
           </>
         )}
-        <a href="/profile">个人中心</a>
-        <button onClick={logout} className="btn btn-secondary">退出</button>
+        <a href="/profile"><Icon name="profile" size={16} />个人中心</a>
+        <button onClick={logout} className="btn btn-secondary"><Icon name="logout" size={16} />退出</button>
       </div>
     </nav>
   );
@@ -186,8 +196,9 @@ const AppContent: React.FC = () => {
   const isStudentWithoutClass = user?.role === 'student' && !user.classId;
 
   return (
-    <div className={`app ${themeClass}`}>
-      <StarDecoration />
+    <div className={`app ${themeClass}`} style={user ? { background: 'var(--bg-page)' } : undefined}>
+      {!user && <ThreeDBackground />}
+      {!user && <StarDecoration />}
       {user && <Navbar />}
       <main className="main-content">
         <Routes>
@@ -286,6 +297,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 {isStudentWithoutClass ? <Navigate to="/classes" /> : <AgentChat />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/llm-settings"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'teacher' ? <LLMSettings /> : <Navigate to="/" />}
               </ProtectedRoute>
             }
           />

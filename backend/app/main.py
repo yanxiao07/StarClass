@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.core.config import settings
-from app.routers import auth, users, classes, homeworks, submissions, agents, chat, knowledge
+from app.routers import auth, users, classes, homeworks, submissions, agents, chat, knowledge, store, llm_config
 
 app = FastAPI(
     title="StarClass AI Agent Platform",
@@ -16,7 +16,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.CORS_ORIGINS,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -30,6 +30,8 @@ app.include_router(submissions.router, prefix="/api/submissions", tags=["Submiss
 app.include_router(agents.router, prefix="/api/agents", tags=["Agents"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(knowledge.router, prefix="/api/knowledge", tags=["Knowledge"])
+app.include_router(store.router, prefix="/api/store", tags=["Store"])
+app.include_router(llm_config.router, prefix="/api/llm", tags=["LLM Config"])
 
 static_dir = Path(__file__).parent.parent / "uploads"
 static_dir.mkdir(exist_ok=True)

@@ -1,7 +1,7 @@
 from sqlalchemy import create_engine
 from app.core.database import Base
 from app.core.config import settings
-from app.models import user, class_, homework, submission, agent, knowledge, chat
+from app.models import user, class_, homework, submission, agent, knowledge, chat, llm_config
 
 def init_database():
     engine = create_engine(settings.DATABASE_URL)

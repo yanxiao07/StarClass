@@ -21,26 +21,26 @@ export interface CreateHomeworkData {
 
 export const homeworkApi = {
   async createHomework(data: CreateHomeworkData) {
-    return apiClient.post<Homework>('/api/homework', data);
+    return apiClient.post<Homework>('/api/homeworks', data);
   },
 
   async getHomeworks() {
-    return apiClient.get<Homework[]>('/api/homework');
+    return apiClient.get<Homework[]>('/api/homeworks');
   },
 
   async getPendingHomeworksCount() {
-    return apiClient.get<{ pendingCount: number }>('/api/homework/pending-count');
+    return apiClient.get<{ pendingCount: number }>('/api/homeworks/pending-count');
   },
 
   async getHomework(id: string) {
-    return apiClient.get<Homework>(`/api/homework/${id}`);
+    return apiClient.get<Homework>(`/api/homeworks/${id}`);
   },
 
   async updateHomework(id: string, data: Partial<CreateHomeworkData>) {
-    return apiClient.put<Homework>(`/api/homework/${id}`, data);
+    return apiClient.put<Homework>(`/api/homeworks/${id}`, data);
   },
 
   async deleteHomework(id: string) {
-    return apiClient.delete<{ message: string }>(`/api/homework/${id}`);
+    return apiClient.delete<{ message: string }>(`/api/homeworks/${id}`);
   }
 };

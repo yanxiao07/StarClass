@@ -13,16 +13,16 @@ export interface StudentStats {
 }
 
 export const userApi = {
-  async updateProfile(data: { nickname?: string; avatar?: string }): Promise<any> {
-    return apiClient.put('/api/users/profile', data);
+  async updateProfile(data: { nickname?: string; avatar?: string; name?: string }): Promise<any> {
+    return apiClient.put('/api/users/me', data);
   },
-  
+
   async rewardStars(studentId: string, stars: number): Promise<any> {
     return apiClient.post('/api/users/reward-stars', { studentId, stars });
   },
 
   async getMyStats(): Promise<StudentStats> {
-    return apiClient.get<StudentStats>('/api/users/my-stats');
+    return apiClient.get<StudentStats>('/api/users/me/my-stats');
   },
 
   async deleteAccount(): Promise<any> {

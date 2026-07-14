@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || '';
 
 interface RequestOptions extends RequestInit {
   headers?: Record<string, string>;
@@ -47,7 +47,8 @@ class ApiClient {
     }
 
     if (!response.ok) {
-      throw new Error(data.error || data.detail || '请求失败');
+      const errMsg = data.error || data.detail || `请求失败 (${response.status})`;
+      throw new Error(typeof errMsg === 'string' ? errMsg : JSON.stringify(errMsg));
     }
 
     return data;

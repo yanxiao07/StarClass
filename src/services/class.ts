@@ -15,22 +15,22 @@ interface ClassData {
 
 export const classApi = {
   async createClass(name: string): Promise<ClassData> {
-    return apiClient.post<ClassData>('/api/class/create', { name });
+    return apiClient.post<ClassData>('/api/classes', { name });
   },
 
   async joinClass(classCode: string): Promise<any> {
-    return apiClient.post('/api/class/join', { classCode });
+    return apiClient.post('/api/classes/join', { classCode });
   },
 
   async getTeacherClasses(): Promise<ClassData[]> {
-    return apiClient.get<ClassData[]>('/api/class/teacher');
+    return apiClient.get<ClassData[]>('/api/classes/teacher');
   },
 
   async getClassById(classId: string): Promise<ClassData> {
-    return apiClient.get<ClassData>(`/api/class/${classId}`);
+    return apiClient.get<ClassData>(`/api/classes/${classId}`);
   },
 
   async removeStudent(classId: string, studentId: string): Promise<any> {
-    return apiClient.delete(`/api/class/${classId}/students/${studentId}`);
+    return apiClient.delete(`/api/classes/${classId}/students/${studentId}`);
   },
 };

@@ -2,21 +2,11 @@ import { apiClient } from './client';
 
 export const chatApi = {
   async getClassMessages(classId: string): Promise<any[]> {
-    return apiClient.get(`/api/chat/classes/${classId}/messages`);
+    return apiClient.get(`/api/chat/class/${classId}`);
   },
 
   async sendClassMessage(classId: string, data: { content?: string; imageUrl?: string; file?: File }): Promise<any> {
-    const formData = new FormData();
-    if (data.content) {
-      formData.append('content', data.content);
-    }
-    if (data.imageUrl) {
-      formData.append('imageUrl', data.imageUrl);
-    }
-    if (data.file) {
-      formData.append('file', data.file);
-    }
-    return apiClient.postFormData(`/api/chat/classes/${classId}/messages`, formData);
+    return apiClient.post(`/api/chat/class/${classId}`, { content: data.content });
   },
 
   async uploadChatImage(file: File): Promise<{ imageUrl: string }> {

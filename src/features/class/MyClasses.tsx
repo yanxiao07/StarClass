@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { classApi } from '../../services/class';
 import { chatApi } from '../../services/chat';
 import { useNavigate } from 'react-router-dom';
+import Icon from '../../components/Icon';
 
 interface ClassData {
   id: string;
@@ -31,17 +32,17 @@ const MyClasses: React.FC = () => {
     try {
       setLoading(true);
       setError('');
-      
+
       if (user?.role === 'teacher') {
         const data = await classApi.getTeacherClasses();
         setClasses(data);
-        
+
         const newMessagesSet = new Set<string>();
         for (const cls of data) {
           try {
             const isMuted = localStorage.getItem(`muted_${user.id}_${cls.id}`) === 'true';
             if (isMuted) continue;
-            
+
             const messages = await chatApi.getClassMessages(cls.id);
             const otherMessages = messages.filter((msg: any) => msg.sender.id !== user.id);
             if (otherMessages.length > 0) {
@@ -59,7 +60,7 @@ const MyClasses: React.FC = () => {
       } else if (user?.classId) {
         const data = await classApi.getClassById(user.classId);
         setClasses([data]);
-        
+
         const newMessagesSet = new Set<string>();
         try {
           const isMuted = localStorage.getItem(`muted_${user.id}_${user.classId}`) === 'true';
@@ -110,11 +111,11 @@ const MyClasses: React.FC = () => {
 
   useEffect(() => {
     loadClasses();
-    
+
     const interval = setInterval(() => {
       loadClasses();
     }, 10000);
-    
+
     return () => clearInterval(interval);
   }, [user]);
 
@@ -128,9 +129,13 @@ const MyClasses: React.FC = () => {
     <div className="my-classes-page">
       <div className="card">
         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 className="card-title">我的班级</h2>
+          <h2 className="card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon name="class" size={22} color="#2563eb" />
+            我的班级
+          </h2>
           {user.role === 'student' && !user.classId && (
-            <button className="btn btn-primary" onClick={() => setShowJoinClass(true)}>
+            <button className="btn btn-primary" onClick={() => setShowJoinClass(true)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+              <Icon name="add" size={16} color="#ffffff" />
               加入班级
             </button>
           )}
@@ -139,23 +144,28 @@ const MyClasses: React.FC = () => {
         {error && <div className="error-message" style={{ marginBottom: '1rem' }}>{error}</div>}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>加载中...</div>
+          <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+            <Icon name="loading" size={18} color="#64748b" spin />
+            加载中...
+          </div>
         ) : classes.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+          <div className="text-muted" style={{ textAlign: 'center', padding: '2rem', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.75rem' }}>
+            <Icon name="class" size={40} color="#94a3b8" />
             {user.role === 'teacher' ? '还没有创建班级' : '还没有加入班级'}
           </div>
         ) : (
           <div className="grid grid-2">
             {classes.map((cls) => (
-              <div 
-                key={cls.id} 
-                className="class-card" 
-                style={{ 
-                  padding: '1.5rem', 
-                  border: '1px solid #e2e8f0', 
-                  borderRadius: '8px', 
+              <div
+                key={cls.id}
+                className="class-card"
+                style={{
+                  padding: '1.5rem',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '8px',
                   cursor: 'pointer',
-                  position: 'relative'
+                  position: 'relative',
+                  background: '#ffffff'
                 }}
                 onClick={() => handleClassClick(cls.id)}
               >
@@ -170,15 +180,18 @@ const MyClasses: React.FC = () => {
                     backgroundColor: '#ef4444'
                   }} />
                 )}
-                <div className="class-card-header" style={{ marginBottom: '1rem' }}>
-                  <h3>{cls.name}</h3>
+                <div className="class-card-header" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Icon name="class" size={20} color="#2563eb" />
+                  <h3 style={{ margin: 0 }}>{cls.name}</h3>
                   <span className="badge badge-pending">班级号: {cls.classCode}</span>
                 </div>
-                <p style={{ color: '#718096', margin: '0.5rem 0' }}>
+                <p style={{ color: '#64748b', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <Icon name="calendar" size={14} color="#64748b" />
                   创建时间: {cls.createdAt.split('T')[0]}
                 </p>
                 {user.role === 'teacher' && (
-                  <p style={{ color: '#718096', margin: '0.5rem 0' }}>
+                  <p style={{ color: '#64748b', margin: '0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.375rem' }}>
+                    <Icon name="users" size={14} color="#64748b" />
                     学生人数: {cls._count?.students || 0}
                   </p>
                 )}
@@ -192,13 +205,22 @@ const MyClasses: React.FC = () => {
         <div className="modal-overlay" onClick={() => setShowJoinClass(false)}>
           <div className="modal" onClick={(e) => e.stopPropagation()}>
             <div className="modal-header">
-              <h3>加入班级</h3>
-              <button className="btn" onClick={() => setShowJoinClass(false)}>关闭</button>
+              <h3 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Icon name="login" size={20} color="#2563eb" />
+                加入班级
+              </h3>
+              <button className="btn" onClick={() => setShowJoinClass(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Icon name="close" size={16} color="#334155" />
+                关闭
+              </button>
             </div>
             <div className="modal-content">
               {error && <div className="error-message">{error}</div>}
               <div className="form-group">
-                <label>班级号</label>
+                <label style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}>
+                  <Icon name="code" size={14} color="#334155" />
+                  班级号
+                </label>
                 <input
                   type="text"
                   className="form-input"
@@ -209,12 +231,17 @@ const MyClasses: React.FC = () => {
               </div>
             </div>
             <div className="modal-footer">
-              <button className="btn" onClick={() => setShowJoinClass(false)}>取消</button>
-              <button 
-                className="btn btn-primary" 
+              <button className="btn" onClick={() => setShowJoinClass(false)} style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                <Icon name="close" size={16} color="#334155" />
+                取消
+              </button>
+              <button
+                className="btn btn-primary"
                 onClick={handleJoinClass}
                 disabled={joining}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '0.375rem' }}
               >
+                <Icon name="check" size={16} color="#ffffff" />
                 {joining ? '加入中...' : '加入'}
               </button>
             </div>

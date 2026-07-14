@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { apiClient } from '../../services/client';
+import { homeworkApi } from '../../services/homework';
 import { classApi } from '../../services/class';
 import { Link } from 'react-router-dom';
+import Icon from '../../components/Icon';
 
 interface Homework {
   id: string;
@@ -11,8 +12,8 @@ interface Homework {
   subject: string;
   dueDate: string;
   className: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
   _count?: {
     submissions: number;
   };
@@ -39,7 +40,7 @@ const TeacherHomework: React.FC = () => {
   const loadHomeworks = async () => {
     try {
       setLoading(true);
-      const data = await apiClient.get<Homework[]>('/api/homework');
+      const data = await homeworkApi.getHomeworks();
       setHomeworks(data);
     } catch (err: any) {
       setError(err.message || '加载作业失败');
@@ -67,12 +68,16 @@ const TeacherHomework: React.FC = () => {
     setError('');
 
     try {
+      const payload = {
+        ...formData,
+        dueDate: formData.dueDate ? new Date(formData.dueDate).toISOString() : new Date().toISOString(),
+      };
       if (editingHomework) {
-        await apiClient.put(`/api/homework/${editingHomework.id}`, formData);
+        await homeworkApi.updateHomework(editingHomework.id, payload);
       } else {
-        await apiClient.post('/api/homework', formData);
+        await homeworkApi.createHomework(payload);
       }
-      
+
       setShowForm(false);
       setEditingHomework(null);
       setFormData({ title: '', description: '', subject: '', dueDate: '', className: '', classId: '' });
@@ -102,7 +107,7 @@ const TeacherHomework: React.FC = () => {
 
     try {
       setError('');
-      await apiClient.delete(`/api/homework/${id}`);
+      await homeworkApi.deleteHomework(id);
       loadHomeworks();
     } catch (err: any) {
       setError(err.message || '删除失败');
@@ -122,13 +127,29 @@ const TeacherHomework: React.FC = () => {
     <div className="homework-page">
       <div className="card">
         <div className="card-header">
-          <h2 className="card-title">作业管理</h2>
+          <h2 className="card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon name="homework" size={24} color="#2563eb" />
+            作业管理
+          </h2>
           <button className="btn btn-primary" onClick={() => setShowForm(!showForm)}>
-            {showForm ? '取消' : '+ 布置新作业'}
+            {showForm ? (
+              <>
+                <Icon name="close" size={16} />
+                取消
+              </>
+            ) : (
+              <>
+                <Icon name="add" size={16} />
+                布置新作业
+              </>
+            )}
           </button>
         </div>
 
-        {error && <div className="error-message" style={{ marginBottom: '1rem', color: '#dc2626' }}>{error}</div>}
+        {error && <div className="error-message" style={{ marginBottom: '1rem', color: '#ef4444', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <Icon name="warning" size={16} color="#ef4444" />
+          {error}
+        </div>}
 
         {showForm && (
           <form onSubmit={handleSubmit} className="homework-form">
@@ -179,22 +200,26 @@ const TeacherHomework: React.FC = () => {
                 <label className="form-label">班级</label>
                 <select
                   className="form-select"
-                  value={formData.className}
-                  onChange={(e) => setFormData({ ...formData, className: e.target.value })}
-                  required
+                  value={formData.classId}
+                  onChange={(e) => {
+                    const selectedClass = classes.find(c => c.id === e.target.value);
+                    setFormData({ ...formData, classId: e.target.value, className: selectedClass?.name || '' });
+                  }}
                 >
-                  <option value="">请选择班级</option>
+                  <option value="">不指定班级</option>
                   {classes.map((cls) => (
-                    <option key={cls.id} value={cls.name}>{cls.name}</option>
+                    <option key={cls.id} value={cls.id}>{cls.name}</option>
                   ))}
                 </select>
               </div>
             </div>
             <div style={{ marginTop: '1.5rem', display: 'flex', gap: '1rem' }}>
               <button type="submit" className="btn btn-primary">
+                <Icon name={editingHomework ? 'edit' : 'send'} size={16} />
                 {editingHomework ? '更新作业' : '发布作业'}
               </button>
               <button type="button" className="btn btn-secondary" onClick={handleCancel}>
+                <Icon name="close" size={16} />
                 取消
               </button>
             </div>
@@ -204,15 +229,22 @@ const TeacherHomework: React.FC = () => {
 
       <div className="card">
         <div className="card-header">
-          <h3 className="card-title">作业列表</h3>
+          <h3 className="card-title" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+            <Icon name="folder" size={20} color="#2563eb" />
+            作业列表
+          </h3>
         </div>
-        
+
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '2rem' }}>加载中...</div>
+          <div style={{ textAlign: 'center', padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem', color: '#334155' }}>
+            <Icon name="loading" size={20} spin />
+            加载中...
+          </div>
         ) : (
           <div className="homework-list">
             {homeworks.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '2rem', color: '#718096' }}>
+              <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                <Icon name="info" size={18} />
                 暂无作业
               </div>
             ) : (
@@ -220,38 +252,56 @@ const TeacherHomework: React.FC = () => {
                 <div key={hw.id} className="homework-card">
                   <div className="homework-card-header">
                     <div>
-                      <h4>{hw.title}</h4>
-                      <span className="badge badge-pending">{hw.subject}</span>
+                      <h4 style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
+                        <Icon name="book" size={18} color="#2563eb" />
+                        {hw.title}
+                      </h4>
+                      <span className="badge badge-pending" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                        <Icon name="code" size={12} />
+                        {hw.subject}
+                      </span>
                     </div>
                     <div className="homework-actions">
-                      <Link 
-                        to={`/submissions?homeworkId=${hw.id}`} 
-                        className="btn btn-secondary" 
+                      <Link
+                        to={`/submissions?homeworkId=${hw.id}`}
+                        className="btn btn-secondary"
                         style={{ padding: '0.5rem 1rem' }}
                       >
+                        <Icon name="eye" size={14} />
                         查看提交
                       </Link>
-                      <button 
-                        className="btn btn-secondary" 
+                      <button
+                        className="btn btn-secondary"
                         style={{ padding: '0.5rem 1rem' }}
                         onClick={() => handleEdit(hw)}
                       >
+                        <Icon name="edit" size={14} />
                         编辑
                       </button>
-                      <button 
-                        className="btn btn-danger" 
+                      <button
+                        className="btn btn-danger"
                         style={{ padding: '0.5rem 1rem' }}
                         onClick={() => handleDelete(hw.id)}
                       >
+                        <Icon name="delete" size={14} />
                         删除
                       </button>
                     </div>
                   </div>
-                  <p style={{ color: '#718096', margin: '1rem 0' }}>{hw.description}</p>
+                  <p style={{ color: '#64748b', margin: '1rem 0' }}>{hw.description}</p>
                   <div className="homework-card-footer">
-                    <span>📅 截止: {hw.dueDate.split('T')[0]}</span>
-                    <span>👥 {hw.className}</span>
-                    <span className="badge badge-graded">{hw._count?.submissions || 0} 已提交</span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Icon name="calendar" size={14} color="#334155" />
+                      截止: {hw.dueDate.split('T')[0]}
+                    </span>
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+                      <Icon name="users" size={14} color="#334155" />
+                      {hw.className || '未指定'}
+                    </span>
+                    <span className="badge badge-graded" style={{ display: 'inline-flex', alignItems: 'center', gap: '0.25rem' }}>
+                      <Icon name="check" size={12} />
+                      {hw._count?.submissions || 0} 已提交
+                    </span>
                   </div>
                 </div>
               ))

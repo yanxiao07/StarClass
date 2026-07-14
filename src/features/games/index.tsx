@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../auth/AuthContext';
-import { apiClient } from '../../services/client';
+import { homeworkApi } from '../../services/homework';
 import { submissionApi } from '../../services/submission';
+import { apiClient } from '../../services/client';
 
 const Games: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -32,7 +33,7 @@ const Games: React.FC = () => {
     try {
       setLoading(true);
       const [homeworks, submissions] = await Promise.all([
-        apiClient.get<any[]>('/api/homework'),
+        homeworkApi.getHomeworks(),
         submissionApi.getSubmissions()
       ]);
 
@@ -109,11 +110,11 @@ const Games: React.FC = () => {
     try {
       setLoading(true);
       await apiClient.put('/api/user/profile', { stars: user.stars - cost });
-      
+
       const newUnlocked = [...unlockedGames, gameId];
       setUnlockedGames(newUnlocked);
       localStorage.setItem('unlockedGames', JSON.stringify(newUnlocked));
-      
+
       await refreshUser();
       alert('解锁成功！');
     } catch (err: any) {
@@ -131,8 +132,8 @@ const Games: React.FC = () => {
       <div className="games-page">
         <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
           <div style={{ fontSize: '64px', marginBottom: '1rem' }}>🎮</div>
-          <h2 style={{ marginBottom: '1rem', color: '#374151' }}>游戏中心</h2>
-          <p style={{ marginBottom: '2rem', color: '#6b7280', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <h2 style={{ marginBottom: '1rem', color: '#0f172a' }}>游戏中心</h2>
+          <p style={{ marginBottom: '2rem', color: '#64748b', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
             请先加入班级并完成作业，然后才能玩游戏！
           </p>
         </div>
@@ -145,7 +146,7 @@ const Games: React.FC = () => {
       <div className="games-page">
         <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
           <div style={{ fontSize: '64px', marginBottom: '1rem' }}>⏳</div>
-          <h2 style={{ marginBottom: '1rem', color: '#374151' }}>检查作业状态中...</h2>
+          <h2 style={{ marginBottom: '1rem', color: '#0f172a' }}>检查作业状态中...</h2>
         </div>
       </div>
     );
@@ -156,12 +157,12 @@ const Games: React.FC = () => {
       <div className="games-page">
         <div className="card" style={{ textAlign: 'center', padding: '3rem 2rem' }}>
           <div style={{ fontSize: '64px', marginBottom: '1rem' }}>📚</div>
-          <h2 style={{ marginBottom: '1rem', color: '#374151' }}>先完成作业！</h2>
-          <p style={{ marginBottom: '2rem', color: '#6b7280', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
+          <h2 style={{ marginBottom: '1rem', color: '#0f172a' }}>先完成作业！</h2>
+          <p style={{ marginBottom: '2rem', color: '#64748b', maxWidth: '500px', marginLeft: 'auto', marginRight: 'auto' }}>
             你还有 {pendingCount} 个作业没有提交。完成所有作业后才能玩游戏！
           </p>
-          <button 
-            className="btn btn-primary" 
+          <button
+            className="btn btn-primary"
             onClick={() => window.location.href = '/homework'}
           >
             去完成作业
@@ -188,26 +189,26 @@ const Games: React.FC = () => {
         <div className="card-header">
           <h2 className="card-title">🎮 游戏中心</h2>
         </div>
-        <p style={{ color: '#6b7280', marginBottom: '1.5rem' }}>
+        <p style={{ color: '#64748b', marginBottom: '1.5rem' }}>
           完成所有作业后，来这里放松一下吧！用星星解锁更多游戏！
         </p>
         <div className="grid grid-2">
           {games.map((game) => {
             const isUnlocked = unlockedGames.includes(game.id);
             return (
-              <div 
-                key={game.id} 
+              <div
+                key={game.id}
                 className="game-card card"
                 onClick={() => isUnlocked && setActiveGame(game.id)}
-                style={{ 
-                  cursor: isUnlocked ? 'pointer' : 'not-allowed', 
+                style={{
+                  cursor: isUnlocked ? 'pointer' : 'not-allowed',
                   transition: 'transform 0.2s',
                   opacity: isUnlocked ? 1 : 0.6
                 }}
               >
                 <div style={{ fontSize: '48px', marginBottom: '1rem' }}>{game.icon}</div>
-                <h3 style={{ marginBottom: '0.5rem', color: '#1f2937' }}>{game.name}</h3>
-                <p style={{ color: '#6b7280', fontSize: '0.875rem', marginBottom: '0.75rem' }}>{game.description}</p>
+                <h3 style={{ marginBottom: '0.5rem', color: '#0f172a' }}>{game.name}</h3>
+                <p style={{ color: '#64748b', fontSize: '0.875rem', marginBottom: '0.75rem' }}>{game.description}</p>
                 {!isUnlocked && (
                   <button
                     onClick={(e) => {
@@ -295,9 +296,9 @@ const MemoryGame: React.FC<GameProps> = ({ onBack }) => {
           <button className="btn" onClick={initGame}>重新开始</button>
         </div>
       </div>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(4, 1fr)', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '0.75rem',
         maxWidth: '400px',
         margin: '0 auto'
@@ -308,7 +309,7 @@ const MemoryGame: React.FC<GameProps> = ({ onBack }) => {
             onClick={() => handleCardClick(index)}
             style={{
               aspectRatio: '1',
-              background: matched.includes(index) ? '#10b981' : flipped.includes(index) ? '#3b82f6' : '#f3f4f6',
+              background: matched.includes(index) ? '#10b981' : flipped.includes(index) ? '#2563eb' : '#f1f5f9',
               borderRadius: '8px',
               display: 'flex',
               alignItems: 'center',
@@ -326,7 +327,7 @@ const MemoryGame: React.FC<GameProps> = ({ onBack }) => {
         <div style={{ textAlign: 'center', marginTop: '2rem' }}>
           <div style={{ fontSize: '48px', marginBottom: '1rem' }}>🎉</div>
           <h3>恭喜你赢了！</h3>
-          <p style={{ color: '#6b7280', marginBottom: '1rem' }}>你用了 {moves} 步完成</p>
+          <p style={{ color: '#64748b', marginBottom: '1rem' }}>你用了 {moves} 步完成</p>
         </div>
       )}
     </div>
@@ -354,7 +355,7 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
     if (!ctx) return;
     const state = gameStateRef.current;
 
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = '#f8fafc';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     state.snake.forEach(segment => {
@@ -468,17 +469,17 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
           ref={canvasRef}
           width={400}
           height={400}
-          style={{ border: '2px solid #e5e7eb', borderRadius: '8px', background: '#ffffff' }}
+          style={{ border: '2px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc' }}
         />
       </div>
-      <div style={{ textAlign: 'center', marginTop: '1rem', color: '#6b7280' }}>
+      <div style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b' }}>
         使用方向键控制蛇的移动
       </div>
       {gameOver && (
         <div style={{ textAlign: 'center', marginTop: '1rem' }}>
           <div style={{ fontSize: '48px', marginBottom: '1rem' }}>💀</div>
           <h3>游戏结束！</h3>
-          <p style={{ color: '#6b7280' }}>最终分数: {score}</p>
+          <p style={{ color: '#64748b' }}>最终分数: {score}</p>
         </div>
       )}
     </div>
@@ -666,7 +667,7 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
 
   const getTileColor = (val: number) => {
     const colors: Record<number, string> = {
-      0: '#f3f4f6',
+      0: '#f1f5f9',
       2: '#fef3c7',
       4: '#fde68a',
       8: '#fcd34d',
@@ -679,7 +680,7 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
       1024: '#dc2626',
       2048: '#991b1b'
     };
-    return colors[val] || '#1f2937';
+    return colors[val] || '#f1f5f9';
   };
 
   return (
@@ -694,14 +695,14 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
           <button className="btn" onClick={initGame}>重新开始</button>
         </div>
       </div>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: `repeat(${size}, 1fr)`, 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: `repeat(${size}, 1fr)`,
         gap: '0.5rem',
         maxWidth: '400px',
         margin: '1rem auto',
         padding: '0.5rem',
-        background: '#f3f4f6',
+        background: '#f1f5f9',
         borderRadius: '8px'
       }}>
         {grid.map((row, i) =>
@@ -725,7 +726,7 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
           ))
         )}
       </div>
-      <div style={{ textAlign: 'center', color: '#6b7280' }}>
+      <div style={{ textAlign: 'center', color: '#64748b' }}>
         使用方向键移动数字方块
       </div>
     </div>
@@ -739,18 +740,18 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
 
   const handleClick = (i: number) => {
     if (winner || board[i]) return;
-    
+
     const newBoard = [...board];
     newBoard[i] = 'X';
     setBoard(newBoard);
-    
+
     const calculateWinner = (squares: (string | null)[]) => {
       const lines = [
         [0, 1, 2], [3, 4, 5], [6, 7, 8],
         [0, 3, 6], [1, 4, 7], [2, 5, 8],
         [0, 4, 8], [2, 4, 6]
       ];
-      
+
       for (let i = 0; i < lines.length; i++) {
         const [a, b, c] = lines[i];
         if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
@@ -759,29 +760,29 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
       }
       return null;
     };
-    
+
     const newWinner = calculateWinner(newBoard);
     if (newWinner) {
       setWinner(newWinner);
       return;
     }
-    
+
     if (newBoard.every(square => square !== null)) {
       setWinner('draw');
       return;
     }
 
     setIsXNext(false);
-    
+
     setTimeout(() => {
       const aiBoard = [...newBoard];
       const availableMoves = aiBoard.map((square, index) => square === null ? index : null).filter((val): val is number => val !== null);
-      
+
       if (availableMoves.length > 0) {
         const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
         aiBoard[randomMove] = 'O';
         setBoard(aiBoard);
-        
+
         const aiWinner = calculateWinner(aiBoard);
         if (aiWinner) {
           setWinner(aiWinner);
@@ -809,9 +810,9 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
         </div>
         <button className="btn" onClick={resetGame}>重新开始</button>
       </div>
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(3, 1fr)', 
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(3, 1fr)',
         gap: '0.5rem',
         maxWidth: '300px',
         margin: '1rem auto'
@@ -824,11 +825,11 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
               aspectRatio: '1',
               fontSize: '3rem',
               fontWeight: 'bold',
-              background: '#f3f4f6',
-              border: '2px solid #e5e7eb',
+              background: '#f1f5f9',
+              border: '2px solid #e2e8f0',
               borderRadius: '8px',
               cursor: 'pointer',
-              color: square === 'X' ? '#3b82f6' : square === 'O' ? '#ef4444' : '#1f2937'
+              color: square === 'X' ? '#2563eb' : square === 'O' ? '#ef4444' : '#0f172a'
             }}
           >
             {square}
@@ -851,7 +852,7 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
         </div>
       )}
       {!winner && (
-        <div style={{ textAlign: 'center', marginTop: '1rem', color: '#6b7280' }}>
+        <div style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b' }}>
           {isXNext ? '你的回合 (X)' : 'AI思考中...'}
         </div>
       )}

@@ -6,7 +6,7 @@ from app.core.config import settings
 
 if "sqlite" in settings.DATABASE_URL:
     engine = create_engine(
-        settings.DATABASE_URL,
+        settings.DATABASE_URL.replace("?charset=utf8", ""),
         echo=True,
         connect_args={
             "check_same_thread": False,
