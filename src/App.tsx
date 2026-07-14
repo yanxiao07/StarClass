@@ -16,6 +16,7 @@ import ClassChat from './features/class/ClassChat';
 import Games from './features/games';
 import AIChat from './features/games/AIChat';
 import StarStore from './features/store/StarStore';
+import MyPet from './features/pet/MyPet';
 import AgentChat from './features/agents/AgentChat';
 import LLMSettings from './features/settings/LLMSettings';
 import './styles/Minimal.css';
@@ -165,6 +166,7 @@ const Navbar: React.FC = () => {
             <a href="/ai-chat"><Icon name="robot" size={16} />AI助手</a>
             <a href="/agents"><Icon name="agent" size={16} />智能体</a>
             <a href="/store"><Icon name="store" size={16} />商城</a>
+            <a href="/pet"><Icon name="agent" size={16} />宠物</a>
           </>
         )}
         {user.role === 'student' && isStudentWithoutClass && (
@@ -297,6 +299,14 @@ const AppContent: React.FC = () => {
             element={
               <ProtectedRoute>
                 {isStudentWithoutClass ? <Navigate to="/classes" /> : <AgentChat />}
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/pet"
+            element={
+              <ProtectedRoute>
+                {user?.role === 'student' ? <MyPet /> : <Navigate to="/" />}
               </ProtectedRoute>
             }
           />

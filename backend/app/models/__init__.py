@@ -5,6 +5,7 @@ from .submission import Submission
 from .agent import Agent, AgentConversation, AgentMessage, AgentToolCall
 from .knowledge import KnowledgeBase
 from .chat import ChatMessage
+from .pet import Pet, UserPet, Purchase
 
 __all__ = [
     "User",
@@ -17,4 +18,7 @@ __all__ = [
     "AgentToolCall",
     "KnowledgeBase",
     "ChatMessage",
+    "Pet",
+    "UserPet",
+    "Purchase",
 ]

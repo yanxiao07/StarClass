@@ -3,6 +3,17 @@ import { useAuth } from '../auth/AuthContext';
 import { homeworkApi } from '../../services/homework';
 import { submissionApi } from '../../services/submission';
 import { apiClient } from '../../services/client';
+import Icon from '../../components/Icon';
+
+// 从AI响应中提取文本（兼容多种返回格式）
+const extractAIResponse = (data: any): string => {
+  if (!data) return '';
+  if (typeof data === 'string') return data;
+  if (typeof data === 'object') {
+    return data.response || data.answer || data.content || data.message || data.text || '';
+  }
+  return '';
+};
 
 const Games: React.FC = () => {
   const { user, refreshUser } = useAuth();
@@ -245,22 +256,45 @@ const MemoryGame: React.FC<GameProps> = ({ onBack }) => {
   const [matched, setMatched] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
   const [won, setWon] = useState(false);
+  // AI出题：卡片词语，默认使用学科词语，可由AI生成
+  const [words, setWords] = useState<string[]>(['数学', '语文', '英语', '物理', '化学', '历史', '地理', '生物']);
 
-  const emojis = ['🎈', '🎨', '🎭', '🎪', '🎯', '🎲', '🎸', '🎺'];
-
-  const initGame = () => {
-    const gameCards = [...emojis, ...emojis]
+  const initGame = useCallback(() => {
+    const gameCards = [...words, ...words]
       .sort(() => Math.random() - 0.5);
     setCards(gameCards);
     setFlipped([]);
     setMatched([]);
     setMoves(0);
     setWon(false);
-  };
+  }, [words]);
+
+  // 开始时调用AI生成学习相关词语配对，失败则使用默认词语库
+  useEffect(() => {
+    const fetchWords = async () => {
+      try {
+        const data = await apiClient.post<any>('/api/agents/orchestrator/solve', {
+          message: '请生成8个学习相关的词语配对，用于记忆翻牌游戏，返回JSON数组格式如["词语1","词语2",...]'
+        });
+        const text = extractAIResponse(data);
+        // 尝试从返回文本中解析JSON数组
+        const match = text.match(/\[[\s\S]*\]/);
+        if (match) {
+          const parsed = JSON.parse(match[0]);
+          if (Array.isArray(parsed) && parsed.length >= 8) {
+            setWords(parsed.slice(0, 8).map((s: any) => String(s)));
+          }
+        }
+      } catch {
+        // API失败时静默降级，使用默认词语库
+      }
+    };
+    fetchWords();
+  }, []);
 
   useEffect(() => {
     initGame();
-  }, []);
+  }, [initGame]);
 
   const handleCardClick = (index: number) => {
     if (flipped.length === 2 || flipped.includes(index) || matched.includes(index)) {
@@ -347,6 +381,9 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
     tileCount: 20
   });
   const animationRef = useRef<any>(null);
+  // AI解说：每得30分调用一次AI生成鼓励语
+  const [aiCommentary, setAiCommentary] = useState('');
+  const lastMilestoneRef = useRef(0);
 
   const draw = useCallback(() => {
     const canvas = canvasRef.current;
@@ -439,6 +476,27 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
     draw();
   }, [draw]);
 
+  // AI解说：每得30分触发一次，调用AI生成鼓励语
+  useEffect(() => {
+    const milestone = Math.floor(score / 30);
+    if (score > 0 && milestone > lastMilestoneRef.current) {
+      lastMilestoneRef.current = milestone;
+      const currentScore = score;
+      const fetchCommentary = async () => {
+        try {
+          const data = await apiClient.post<any>('/api/agents/orchestrator/solve', {
+            message: `我在贪吃蛇游戏得了${currentScore}分，请用一句话鼓励我，15字以内`
+          });
+          const text = extractAIResponse(data);
+          if (text) setAiCommentary(text);
+        } catch {
+          // API失败时静默不报错
+        }
+      };
+      fetchCommentary();
+    }
+  }, [score]);
+
   const startGame = () => {
     gameStateRef.current = {
       snake: [{ x: 10, y: 10 }],
@@ -450,6 +508,8 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
     setScore(0);
     setGameOver(false);
     setGameStarted(true);
+    lastMilestoneRef.current = 0;
+    setAiCommentary('');
   };
 
   return (
@@ -472,6 +532,24 @@ const SnakeGame: React.FC<GameProps> = ({ onBack }) => {
           style={{ border: '2px solid #e2e8f0', borderRadius: '8px', background: '#f8fafc' }}
         />
       </div>
+      {/* AI解说面板 */}
+      <div style={{
+        maxWidth: '400px',
+        margin: '1rem auto 0',
+        padding: '0.75rem 1rem',
+        background: '#f8fafc',
+        border: '1px solid #e2e8f0',
+        borderRadius: '8px',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        <Icon name="robot" size={18} color="#2563eb" />
+        <div>
+          <div style={{ fontSize: '0.75rem', color: '#64748b', marginBottom: '0.125rem' }}>AI解说</div>
+          <div style={{ fontSize: '0.875rem', color: '#0f172a' }}>{aiCommentary || '开始游戏后，AI会为你加油助威'}</div>
+        </div>
+      </div>
       <div style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b' }}>
         使用方向键控制蛇的移动
       </div>
@@ -491,6 +569,11 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
   const [grid, setGrid] = useState<number[][]>([]);
   const [score, setScore] = useState(0);
   const [gameOver, setGameOver] = useState(false);
+  // AI提示：调用AI给出移动方向建议
+  const [aiHint, setAiHint] = useState('');
+  const [hintVisible, setHintVisible] = useState(false);
+  const lastHintTimeRef = useRef(0);
+  const hintTimeoutRef = useRef<any>(null);
 
   const initGame = () => {
     const newGrid = Array(size).fill(null).map(() => Array(size).fill(0));
@@ -518,6 +601,26 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
   useEffect(() => {
     initGame();
   }, []);
+
+  // AI提示：每5秒可点击一次，浮层显示2秒后消失
+  const handleAiHint = async () => {
+    const now = Date.now();
+    if (now - lastHintTimeRef.current < 5000) return;
+    lastHintTimeRef.current = now;
+    try {
+      const data = await apiClient.post<any>('/api/agents/orchestrator/solve', {
+        message: '2048游戏中，当前最佳移动方向通常是什么？请只回答上/下/左/右中的一个方向'
+      });
+      const text = extractAIResponse(data);
+      setAiHint(text || '暂无建议');
+    } catch {
+      // API失败时静默不报错
+      setAiHint('暂无建议');
+    }
+    setHintVisible(true);
+    if (hintTimeoutRef.current) clearTimeout(hintTimeoutRef.current);
+    hintTimeoutRef.current = setTimeout(() => setHintVisible(false), 2000);
+  };
 
   const slide = (row: number[]) => {
     let arr = row.filter(val => val);
@@ -692,38 +795,66 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
         </div>
         <div>
           <span style={{ marginRight: '1rem' }}>分数: {score}</span>
+          <button className="btn" onClick={handleAiHint} style={{ marginRight: '0.5rem' }}>
+            <Icon name="bulb" size={16} color="#f59e0b" /> AI提示
+          </button>
           <button className="btn" onClick={initGame}>重新开始</button>
         </div>
       </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: `repeat(${size}, 1fr)`,
-        gap: '0.5rem',
-        maxWidth: '400px',
-        margin: '1rem auto',
-        padding: '0.5rem',
-        background: '#f1f5f9',
-        borderRadius: '8px'
-      }}>
-        {grid.map((row, i) =>
-          row.map((val, j) => (
-            <div
-              key={`${i}-${j}`}
-              style={{
-                aspectRatio: '1',
-                background: getTileColor(val),
-                borderRadius: '4px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: val >= 1000 ? '1.5rem' : val >= 100 ? '1.75rem' : '2rem',
-                fontWeight: 'bold',
-                color: val > 4 ? '#ffffff' : '#1f2937'
-              }}
-            >
-              {val !== 0 ? val : ''}
-            </div>
-          ))
+      <div style={{ position: 'relative', maxWidth: '400px', margin: '1rem auto' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${size}, 1fr)`,
+          gap: '0.5rem',
+          maxWidth: '400px',
+          margin: '0 auto',
+          padding: '0.5rem',
+          background: '#f1f5f9',
+          borderRadius: '8px'
+        }}>
+          {grid.map((row, i) =>
+            row.map((val, j) => (
+              <div
+                key={`${i}-${j}`}
+                style={{
+                  aspectRatio: '1',
+                  background: getTileColor(val),
+                  borderRadius: '4px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: val >= 1000 ? '1.5rem' : val >= 100 ? '1.75rem' : '2rem',
+                  fontWeight: 'bold',
+                  color: val > 4 ? '#ffffff' : '#1f2937'
+                }}
+              >
+                {val !== 0 ? val : ''}
+              </div>
+            ))
+          )}
+        </div>
+        {/* AI提示浮层 */}
+        {hintVisible && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            background: 'rgba(15, 23, 42, 0.85)',
+            color: '#ffffff',
+            padding: '0.75rem 1.5rem',
+            borderRadius: '8px',
+            fontSize: '1rem',
+            fontWeight: 500,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            pointerEvents: 'none',
+            zIndex: 10
+          }}>
+            <Icon name="bulb" size={18} color="#fbbf24" />
+            {aiHint}
+          </div>
         )}
       </div>
       <div style={{ textAlign: 'center', color: '#64748b' }}>
@@ -733,35 +864,86 @@ const Game2048: React.FC<GameProps> = ({ onBack }) => {
   );
 };
 
+// 井字棋胜负判定（模块级函数，供minimax复用）
+const calculateTicTacToeWinner = (squares: (string | null)[]): string | null => {
+  const lines = [
+    [0, 1, 2], [3, 4, 5], [6, 7, 8],
+    [0, 3, 6], [1, 4, 7], [2, 5, 8],
+    [0, 4, 8], [2, 4, 6]
+  ];
+  for (let i = 0; i < lines.length; i++) {
+    const [a, b, c] = lines[i];
+    if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
+      return squares[a];
+    }
+  }
+  return null;
+};
+
+// minimax算法：困难难度AI，保证不输
+const minimax = (board: (string | null)[], isMaximizing: boolean): number => {
+  const winner = calculateTicTacToeWinner(board);
+  if (winner === 'O') return 10;
+  if (winner === 'X') return -10;
+  if (board.every(s => s !== null)) return 0;
+
+  if (isMaximizing) {
+    let best = -Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === null) {
+        board[i] = 'O';
+        best = Math.max(best, minimax(board, false));
+        board[i] = null;
+      }
+    }
+    return best;
+  } else {
+    let best = Infinity;
+    for (let i = 0; i < 9; i++) {
+      if (board[i] === null) {
+        board[i] = 'X';
+        best = Math.min(best, minimax(board, true));
+        board[i] = null;
+      }
+    }
+    return best;
+  }
+};
+
+// 获取最佳落子位置（困难难度，minimax）
+const getBestMove = (board: (string | null)[]): number => {
+  let bestScore = -Infinity;
+  let bestMove = -1;
+  for (let i = 0; i < 9; i++) {
+    if (board[i] === null) {
+      board[i] = 'O';
+      const score = minimax(board, false);
+      board[i] = null;
+      if (score > bestScore) {
+        bestScore = score;
+        bestMove = i;
+      }
+    }
+  }
+  return bestMove;
+};
+
 const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
   const [board, setBoard] = useState<(string | null)[]>(Array(9).fill(null));
   const [isXNext, setIsXNext] = useState(true);
   const [winner, setWinner] = useState<string | null>(null);
+  // 难度分级：简单(随机走法)/普通(当前逻辑)/困难(minimax)
+  const [difficulty, setDifficulty] = useState<'easy' | 'normal' | 'hard'>('normal');
+  const [gameStarted, setGameStarted] = useState(false);
 
   const handleClick = (i: number) => {
-    if (winner || board[i]) return;
+    if (winner || board[i] || !gameStarted) return;
 
     const newBoard = [...board];
     newBoard[i] = 'X';
     setBoard(newBoard);
 
-    const calculateWinner = (squares: (string | null)[]) => {
-      const lines = [
-        [0, 1, 2], [3, 4, 5], [6, 7, 8],
-        [0, 3, 6], [1, 4, 7], [2, 5, 8],
-        [0, 4, 8], [2, 4, 6]
-      ];
-
-      for (let i = 0; i < lines.length; i++) {
-        const [a, b, c] = lines[i];
-        if (squares[a] && squares[a] === squares[b] && squares[a] === squares[c]) {
-          return squares[a];
-        }
-      }
-      return null;
-    };
-
-    const newWinner = calculateWinner(newBoard);
+    const newWinner = calculateTicTacToeWinner(newBoard);
     if (newWinner) {
       setWinner(newWinner);
       return;
@@ -779,11 +961,22 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
       const availableMoves = aiBoard.map((square, index) => square === null ? index : null).filter((val): val is number => val !== null);
 
       if (availableMoves.length > 0) {
-        const randomMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
-        aiBoard[randomMove] = 'O';
+        let aiMove: number;
+        if (difficulty === 'easy') {
+          // 简单难度：随机选空位
+          aiMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        } else if (difficulty === 'hard') {
+          // 困难难度：minimax算法，保证不输
+          aiMove = getBestMove(aiBoard);
+          if (aiMove === -1) aiMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        } else {
+          // 普通难度：保持现有逻辑（随机走法）
+          aiMove = availableMoves[Math.floor(Math.random() * availableMoves.length)];
+        }
+        aiBoard[aiMove] = 'O';
         setBoard(aiBoard);
 
-        const aiWinner = calculateWinner(aiBoard);
+        const aiWinner = calculateTicTacToeWinner(aiBoard);
         if (aiWinner) {
           setWinner(aiWinner);
         } else if (aiBoard.every(square => square !== null)) {
@@ -799,6 +992,16 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
     setBoard(Array(9).fill(null));
     setIsXNext(true);
     setWinner(null);
+    setGameStarted(false);
+  };
+
+  // 选择难度并开始游戏
+  const startWithDifficulty = (level: 'easy' | 'normal' | 'hard') => {
+    setDifficulty(level);
+    setBoard(Array(9).fill(null));
+    setIsXNext(true);
+    setWinner(null);
+    setGameStarted(true);
   };
 
   return (
@@ -808,53 +1011,104 @@ const TicTacToeGame: React.FC<GameProps> = ({ onBack }) => {
           <button className="btn" onClick={onBack} style={{ marginRight: '1rem' }}>← 返回</button>
           <span style={{ fontWeight: 500 }}>⭕ 井字棋</span>
         </div>
-        <button className="btn" onClick={resetGame}>重新开始</button>
+        {gameStarted && <button className="btn" onClick={resetGame}>重新开始</button>}
       </div>
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(3, 1fr)',
-        gap: '0.5rem',
-        maxWidth: '300px',
-        margin: '1rem auto'
-      }}>
-        {board.map((square, i) => (
-          <button
-            key={i}
-            onClick={() => handleClick(i)}
-            style={{
-              aspectRatio: '1',
-              fontSize: '3rem',
-              fontWeight: 'bold',
-              background: '#f1f5f9',
-              border: '2px solid #e2e8f0',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              color: square === 'X' ? '#2563eb' : square === 'O' ? '#ef4444' : '#0f172a'
-            }}
-          >
-            {square}
-          </button>
-        ))}
-      </div>
-      {winner && (
-        <div style={{ textAlign: 'center', marginTop: '1rem' }}>
-          {winner === 'draw' ? (
-            <>
-              <div style={{ fontSize: '48px', marginBottom: '1rem' }}>🤝</div>
-              <h3>平局！</h3>
-            </>
-          ) : (
-            <>
-              <div style={{ fontSize: '48px', marginBottom: '1rem' }}>{winner === 'X' ? '🎉' : '🤖'}</div>
-              <h3>{winner === 'X' ? '你赢了！' : 'AI赢了！'}</h3>
-            </>
+      {/* 难度选择：游戏开始前选择AI难度 */}
+      {!gameStarted ? (
+        <div style={{
+          maxWidth: '400px',
+          margin: '1.5rem auto',
+          padding: '1.5rem',
+          background: '#f8fafc',
+          border: '1px solid #e2e8f0',
+          borderRadius: '8px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '1rem' }}>
+            <Icon name="settings" size={20} color="#2563eb" />
+            <h3 style={{ margin: 0, color: '#0f172a' }}>选择难度</h3>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button
+              className="btn"
+              onClick={() => startWithDifficulty('easy')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem' }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Icon name="info" size={18} color="#0ea5e9" /> 简单
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>AI随机走法</span>
+            </button>
+            <button
+              className="btn"
+              onClick={() => startWithDifficulty('normal')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem' }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Icon name="compass" size={18} color="#f59e0b" /> 普通
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>基础AI对战</span>
+            </button>
+            <button
+              className="btn"
+              onClick={() => startWithDifficulty('hard')}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0.75rem 1rem' }}
+            >
+              <span style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Icon name="trophy" size={18} color="#ef4444" /> 困难
+              </span>
+              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>minimax 不败AI</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '0.5rem',
+            maxWidth: '300px',
+            margin: '1rem auto'
+          }}>
+            {board.map((square, i) => (
+              <button
+                key={i}
+                onClick={() => handleClick(i)}
+                style={{
+                  aspectRatio: '1',
+                  fontSize: '3rem',
+                  fontWeight: 'bold',
+                  background: '#f1f5f9',
+                  border: '2px solid #e2e8f0',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  color: square === 'X' ? '#2563eb' : square === 'O' ? '#ef4444' : '#0f172a'
+                }}
+              >
+                {square}
+              </button>
+            ))}
+          </div>
+          {winner && (
+            <div style={{ textAlign: 'center', marginTop: '1rem' }}>
+              {winner === 'draw' ? (
+                <>
+                  <div style={{ fontSize: '48px', marginBottom: '1rem' }}>🤝</div>
+                  <h3>平局！</h3>
+                </>
+              ) : (
+                <>
+                  <div style={{ fontSize: '48px', marginBottom: '1rem' }}>{winner === 'X' ? '🎉' : '🤖'}</div>
+                  <h3>{winner === 'X' ? '你赢了！' : 'AI赢了！'}</h3>
+                </>
+              )}
+            </div>
           )}
-        </div>
-      )}
-      {!winner && (
-        <div style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b' }}>
-          {isXNext ? '你的回合 (X)' : 'AI思考中...'}
-        </div>
+          {!winner && (
+            <div style={{ textAlign: 'center', marginTop: '1rem', color: '#64748b' }}>
+              {isXNext ? '你的回合 (X)' : 'AI思考中...'}
+            </div>
+          )}
+        </>
       )}
     </div>
   );

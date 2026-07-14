@@ -18,6 +18,8 @@ class User(Base):
     stars = Column(Integer, default=0)
     level = Column(Integer, default=1)
     theme = Column(String(50), default="default")
+    chat_bubble_style = Column(String(50), default="default")
+    active_avatar = Column(String(100), default="")
     is_muted = Column(Boolean, default=False)
     muted_until = Column(DateTime)
     created_at = Column(DateTime, default=datetime.utcnow)

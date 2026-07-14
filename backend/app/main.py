@@ -4,7 +4,8 @@ from fastapi.staticfiles import StaticFiles
 from pathlib import Path
 
 from app.core.config import settings
-from app.routers import auth, users, classes, homeworks, submissions, agents, chat, knowledge, store, llm_config
+from app.core.database import run_migrations
+from app.routers import auth, users, classes, homeworks, submissions, agents, chat, knowledge, store, llm_config, pets
 
 app = FastAPI(
     title="StarClass AI Agent Platform",
@@ -13,6 +14,9 @@ app = FastAPI(
     docs_url="/docs",
     redoc_url="/redoc"
 )
+
+# 启动时自动执行数据库迁移
+run_migrations()
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,6 +35,7 @@ app.include_router(agents.router, prefix="/api/agents", tags=["Agents"])
 app.include_router(chat.router, prefix="/api/chat", tags=["Chat"])
 app.include_router(knowledge.router, prefix="/api/knowledge", tags=["Knowledge"])
 app.include_router(store.router, prefix="/api/store", tags=["Store"])
+app.include_router(pets.router, prefix="/api/pets", tags=["Pets"])
 app.include_router(llm_config.router, prefix="/api/llm", tags=["LLM Config"])
 
 static_dir = Path(__file__).parent.parent / "uploads"

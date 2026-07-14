@@ -1057,12 +1057,117 @@ body {
 }
 
 /* ============================================
-   主题（已弃用，保留兼容性）
+   主题切换 - 通过覆盖 :root 的 CSS 变量实现真实配色
+   主题类加在 .app 元素上（见 App.tsx: theme-${user.theme}）
+   所有使用变量的组件会自动适配
    ============================================ */
-.theme-starry,
-.theme-sakura,
+
+/* 星空主题 - 深蓝夜空 */
+.theme-starry {
+  --bg-page: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
+  --bg-surface: rgba(30, 27, 75, 0.6);
+  --bg-card: rgba(30, 27, 75, 0.6);
+  --bg-subtle: rgba(30, 27, 75, 0.4);
+  --bg-muted: rgba(15, 23, 42, 0.5);
+  --bg-hover: rgba(30, 27, 75, 0.8);
+  --bg-active: rgba(30, 27, 75, 0.9);
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #94a3b8;
+  --text-quaternary: #64748b;
+  --border-light: rgba(241, 245, 249, 0.08);
+  --border-default: rgba(241, 245, 249, 0.12);
+  --border-color: rgba(241, 245, 249, 0.12);
+  --border-strong: rgba(241, 245, 249, 0.2);
+  --navbar-bg: rgba(15, 23, 42, 0.85);
+  color: var(--text-primary);
+}
+
+.theme-starry .card,
+.theme-starry .stat-card,
+.theme-starry .class-item,
+.theme-starry .store-item,
+.theme-starry .homework-card,
+.theme-starry .chat-container,
+.theme-starry .chat-header,
+.theme-starry .chat-input-area {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.theme-starry .navbar {
+  background: var(--navbar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 樱花主题 - 粉色温馨 */
+.theme-sakura {
+  --bg-page: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 50%, #fbcfe8 100%);
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-subtle: #fdf2f8;
+  --bg-muted: #fdf2f8;
+  --bg-hover: #fce7f3;
+  --bg-active: #fbcfe8;
+  --primary: #ec4899;
+  --primary-hover: #db2777;
+  --primary-active: #be185d;
+  --primary-light: #fdf2f8;
+  --primary-bg: #fce7f3;
+  --primary-border: #f9a8d4;
+  --text-primary: #831843;
+  --text-secondary: #9d174d;
+  --text-tertiary: #be185d;
+  --text-muted: #be185d;
+  --text-quaternary: #db2777;
+  --border-light: #fce7f3;
+  --border-default: #fbcfe8;
+  --border-color: #fbcfe8;
+  --border-strong: #f9a8d4;
+  --navbar-bg: rgba(255, 255, 255, 0.9);
+  color: var(--text-primary);
+}
+
+.theme-sakura .card,
+.theme-sakura .stat-card,
+.theme-sakura .class-item,
+.theme-sakura .store-item,
+.theme-sakura .homework-card {
+  border-color: #fbcfe8;
+}
+
+.theme-sakura .navbar {
+  background: var(--navbar-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+/* 暗夜主题 - 纯黑暗色 */
 .theme-dark {
-  background: var(--bg-page);
+  --bg-page: #0a0a0a;
+  --bg-surface: #1a1a1a;
+  --bg-card: #1a1a1a;
+  --bg-subtle: #141414;
+  --bg-muted: #141414;
+  --bg-hover: #242424;
+  --bg-active: #2a2a2a;
+  --text-primary: #f1f5f9;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --text-muted: #94a3b8;
+  --text-quaternary: #64748b;
+  --border-light: #1f1f1f;
+  --border-default: #333333;
+  --border-color: #333333;
+  --border-strong: #404040;
+  --navbar-bg: #1a1a1a;
+  color: var(--text-primary);
+}
+
+.theme-dark .navbar {
+  background: var(--navbar-bg);
 }
 
 /* ============================================

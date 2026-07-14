@@ -1,4 +1,4 @@
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text, inspect
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
@@ -18,6 +18,25 @@ else:
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
+
+
+def run_migrations():
+    """自动迁移：检查并添加缺失的列（SQLite ALTER TABLE ADD COLUMN）"""
+    inspector = inspect(engine)
+
+    # users 表迁移
+    if inspector.has_table("users"):
+        existing_columns = {col["name"] for col in inspector.get_columns("users")}
+        migrations = [
+            ("chat_bubble_style", "VARCHAR(50) DEFAULT 'default'"),
+            ("active_avatar", "VARCHAR(100) DEFAULT ''"),
+        ]
+        with engine.connect() as conn:
+            for col_name, col_type in migrations:
+                if col_name not in existing_columns:
+                    conn.execute(text(f"ALTER TABLE users ADD COLUMN {col_name} {col_type}"))
+                    conn.commit()
+
 
 def get_db():
     db = SessionLocal()

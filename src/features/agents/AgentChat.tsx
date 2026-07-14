@@ -52,6 +52,19 @@ const SUGGESTIONS: Record<string, string[]> = {
   code_coach: ['分析我的代码', 'Python常见错误', '如何调试程序？'],
 };
 
+const getBubbleBackground = (style?: string): string => {
+  switch (style) {
+    case 'rainbow':
+      return 'linear-gradient(135deg, #ef4444, #f59e0b, #10b981, #3b82f6)';
+    case 'ocean':
+      return 'linear-gradient(135deg, #0ea5e9, #2563eb)';
+    case 'gold':
+      return 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+    default:
+      return '#2563eb';
+  }
+};
+
 const AgentChat: React.FC = () => {
   const { user } = useAuth();
   const [agents, setAgents] = useState<Agent[]>([]);
@@ -452,7 +465,7 @@ const AgentChat: React.FC = () => {
                       padding: '0.625rem 1rem',
                       borderRadius: message.role === 'user' ? '12px 12px 4px 12px' : '12px 12px 12px 4px',
                       background: message.role === 'user'
-                        ? '#2563eb'
+                        ? getBubbleBackground(user?.chatBubbleStyle)
                         : '#f1f5f9',
                       border: message.role === 'user' ? 'none' : '1px solid #e2e8f0',
                       color: message.role === 'user' ? '#ffffff' : '#0f172a',

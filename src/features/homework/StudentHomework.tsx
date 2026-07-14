@@ -3,6 +3,7 @@ import { useAuth } from '../auth/AuthContext';
 import { homeworkApi } from '../../services/homework';
 import { submissionApi } from '../../services/submission';
 import { apiClient } from '../../services/client';
+import { petApi } from '../../services/pets';
 import Icon from '../../components/Icon';
 
 const getImageUrl = (url: string | null) => {
@@ -97,6 +98,15 @@ const StudentHomework: React.FC = () => {
         files: selectedFiles.length > 0 ? selectedFiles : undefined
       });
       alert('作业提交成功！');
+      // 宠物奖励：给当前展示宠物加经验+饱腹度
+      try {
+        const reward = await petApi.rewardHomework(10);
+        if (reward.pet && reward.leveledUp) {
+          setTimeout(() => alert(`你的宠物 ${reward.pet!.name} 升到了 Lv.${reward.pet!.level}！`), 500);
+        }
+      } catch {
+        // 宠物奖励失败不影响作业提交
+      }
       setSelectedHomework(null);
       setTextContent('');
       setSelectedFiles([]);

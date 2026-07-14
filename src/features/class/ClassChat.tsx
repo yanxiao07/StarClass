@@ -28,6 +28,19 @@ const getImageUrl = (url: string | null) => {
   return url;
 };
 
+const getBubbleBackground = (style?: string): string => {
+  switch (style) {
+    case 'rainbow':
+      return 'linear-gradient(135deg, #ef4444, #f59e0b, #10b981, #3b82f6)';
+    case 'ocean':
+      return 'linear-gradient(135deg, #0ea5e9, #2563eb)';
+    case 'gold':
+      return 'linear-gradient(135deg, #fbbf24, #f59e0b)';
+    default:
+      return '#2563eb';
+  }
+};
+
 const ClassChat: React.FC = () => {
   const { classId } = useParams<{ classId: string }>();
   const { user, refreshUser } = useAuth();
@@ -359,7 +372,7 @@ const ClassChat: React.FC = () => {
                 {/* 气泡 */}
                 <div style={{
                   background: isOwn
-                    ? '#2563eb'
+                    ? getBubbleBackground(user?.chatBubbleStyle)
                     : '#f1f5f9',
                   color: isOwn ? '#ffffff' : '#0f172a',
                   padding: '0.625rem 1rem',
