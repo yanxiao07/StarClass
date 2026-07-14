@@ -48,3 +48,6 @@ uploads/
 
 # Server directory (deprecated)
 server/
+
+# Trae IDE
+.trae/
