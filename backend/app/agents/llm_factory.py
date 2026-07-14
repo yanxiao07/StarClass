@@ -258,6 +258,8 @@ class _OpenAICompatibleLLM:
             self._client = OpenAI(
                 api_key=self.config.api_key,
                 base_url=self.config.base_url,
+                timeout=15.0,      # 15秒超时，防止 hang 死
+                max_retries=1,      # 最多重试1次
             )
         except ImportError:
             try:
@@ -267,6 +269,8 @@ class _OpenAICompatibleLLM:
                     api_key=self.config.api_key,
                     base_url=self.config.base_url,
                     temperature=0.7,
+                    timeout=15,      # 15秒超时
+                    max_retries=1,
                 )
             except ImportError:
                 raise ImportError("需要安装 openai 或 langchain-openai: pip install openai")
@@ -283,6 +287,7 @@ class _OpenAICompatibleLLM:
                     messages=messages,
                     temperature=temperature,
                     max_tokens=max_tokens,
+                    timeout=15.0,   # 15秒超时
                 )
                 return response.choices[0].message.content
             except Exception as e:
@@ -319,6 +324,7 @@ class _OpenAICompatibleLLM:
                     temperature=temperature,
                     max_tokens=max_tokens,
                     stream=True,
+                    timeout=15.0,   # 15秒超时
                 )
                 for chunk in response:
                     if chunk.choices and chunk.choices[0].delta.content:

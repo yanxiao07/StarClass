@@ -21,10 +21,14 @@ Base = declarative_base()
 
 
 def run_migrations():
-    """自动迁移：检查并添加缺失的列（SQLite ALTER TABLE ADD COLUMN）"""
-    inspector = inspect(engine)
+    """自动迁移：创建缺失的表 + 添加缺失的列（SQLite ALTER TABLE ADD COLUMN）"""
+    from app.models import user, class_, homework, submission, agent, pet  # noqa: F401 确保模型已注册
 
-    # users 表迁移
+    # 1. 自动创建所有缺失的表（包括 pets/user_pets/purchases）
+    Base.metadata.create_all(bind=engine)
+
+    # 2. users 表列迁移（ALTER TABLE ADD COLUMN）
+    inspector = inspect(engine)
     if inspector.has_table("users"):
         existing_columns = {col["name"] for col in inspector.get_columns("users")}
         migrations = [
