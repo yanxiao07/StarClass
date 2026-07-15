@@ -11,6 +11,12 @@ const getImageUrl = (url: string | null) => {
   return `${import.meta.env.VITE_API_URL || ''}${url}`;
 };
 
+// 商城头像框 emoji 映射（与后端 STORE_ITEMS 的 icon 一致）
+const AVATAR_EMOJI: Record<string, string> = {
+  avatar_cat: '🐱',
+  avatar_robot: '🤖',
+};
+
 const Profile: React.FC = () => {
   const { user, logout, updateUser } = useAuth();
   const [nickname, setNickname] = useState(user?.nickname || '');
@@ -87,7 +93,14 @@ const Profile: React.FC = () => {
 
         <div className="profile-content">
           <div className="profile-avatar">
-            {user.avatar ? (
+            {user.activeAvatar && AVATAR_EMOJI[user.activeAvatar] ? (
+              <div
+                className="avatar-circle"
+                style={{ width: '80px', height: '80px', fontSize: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#f1f5f9' }}
+              >
+                {AVATAR_EMOJI[user.activeAvatar]}
+              </div>
+            ) : user.avatar ? (
               <img
                 src={getImageUrl(user.avatar)}
                 alt="头像"
@@ -140,8 +153,8 @@ const Profile: React.FC = () => {
                   onChange={handleAvatarChange}
                   style={{ display: 'none' }}
                 />
-                <button 
-                  onClick={() => fileInputRef.current?.click()} 
+                <button
+                  onClick={() => fileInputRef.current?.click()}
                   className="btn btn-sm"
                   disabled={loading}
                 >
@@ -196,8 +209,8 @@ const Profile: React.FC = () => {
             <button onClick={logout} className="btn btn-danger">
               退出登录
             </button>
-            <button 
-              onClick={handleDeleteAccount} 
+            <button
+              onClick={handleDeleteAccount}
               className="btn btn-secondary"
               style={{ backgroundColor: '#dc2626', color: 'white' }}
               disabled={deleting}

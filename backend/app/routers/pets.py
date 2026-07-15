@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Optional
 import uuid
 from datetime import datetime
@@ -26,7 +26,10 @@ MAX_LEVEL = 8
 
 
 class FeedRequest(BaseModel):
-    food_type: str  # basic / premium
+    # 前端发送 camelCase 的 foodType，用 alias 兼容
+    food_type: str = Field(..., alias="foodType")
+
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class RenameRequest(BaseModel):
@@ -185,12 +188,18 @@ async def feed_pet(
     pet.last_fed_at = datetime.utcnow()
 
     # 升级检查
+    old_level = pet.level
     check_level_up(pet)
+    leveled_up = pet.level > old_level
 
     db.commit()
     db.refresh(pet)
     pet_type = db.query(Pet).filter(Pet.id == pet.pet_type_id).first()
-    return format_pet(pet, pet_type)
+    return {
+        "message": "喂养成功",
+        "pet": format_pet(pet, pet_type),
+        "leveledUp": leveled_up,
+    }
 
 
 @router.post("/{user_pet_id}/interact")
@@ -210,12 +219,18 @@ async def interact_pet(
     pet.last_interaction_at = datetime.utcnow()
 
     # 升级检查
+    old_level = pet.level
     check_level_up(pet)
+    leveled_up = pet.level > old_level
 
     db.commit()
     db.refresh(pet)
     pet_type = db.query(Pet).filter(Pet.id == pet.pet_type_id).first()
-    return format_pet(pet, pet_type)
+    return {
+        "message": "互动成功",
+        "pet": format_pet(pet, pet_type),
+        "leveledUp": leveled_up,
+    }
 
 
 @router.post("/{user_pet_id}/rename")
@@ -268,9 +283,15 @@ async def homework_reward(
     active_pet.exp = (active_pet.exp or 0) + request.exp
 
     # 升级检查
+    old_level = active_pet.level
     check_level_up(active_pet)
+    leveled_up = active_pet.level > old_level
 
     db.commit()
     db.refresh(active_pet)
     pet_type = db.query(Pet).filter(Pet.id == active_pet.pet_type_id).first()
-    return format_pet(active_pet, pet_type)
+    return {
+        "message": "作业奖励已发放",
+        "pet": format_pet(active_pet, pet_type),
+        "leveledUp": leveled_up,
+    }

@@ -17,6 +17,7 @@ class UpdateProfileRequest(BaseModel):
     nickname: Optional[str] = None
     name: Optional[str] = None
     avatar: Optional[str] = None
+    stars: Optional[int] = None  # 游戏大厅扣除星星解锁游戏用
 
 
 class RewardStarsRequest(BaseModel):
@@ -70,6 +71,9 @@ async def update_user(
         user.nickname = request.nickname
     if request.avatar is not None:
         user.avatar = request.avatar
+    if request.stars is not None:
+        # 游戏解锁扣除星星，校验不为负
+        user.stars = max(0, request.stars)
 
     db.commit()
     db.refresh(user)

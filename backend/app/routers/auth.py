@@ -86,4 +86,7 @@ async def get_me(user: User = Depends(get_current_user)):
         "class_id": user.class_id,
         "stars": user.stars,
         "level": user.level,
+        "theme": user.theme or "default",
+        "chat_bubble_style": user.chat_bubble_style or "default",
+        "active_avatar": user.active_avatar or "",
     }

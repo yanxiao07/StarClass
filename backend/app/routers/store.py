@@ -14,7 +14,8 @@ router = APIRouter()
 # 商店商品列表（持久化到数据库 Purchase 表）
 STORE_ITEMS = [
     # 主题
-    {"id": "theme_starry", "name": "星空主题", "description": "深蓝星空背景主题", "price": 50, "type": "theme", "icon": "🌟"},
+    {"id": "theme_default", "name": "经典主题", "description": "默认浅色主题，清爽简洁", "price": 0, "type": "theme", "icon": "☀️"},
+    {"id": "theme_starry", "name": "星空主题", "description": "深蓝星空背景主题，含闪烁星星", "price": 50, "type": "theme", "icon": "🌟"},
     {"id": "theme_sakura", "name": "樱花主题", "description": "粉色樱花背景主题", "price": 80, "type": "theme", "icon": "🌸"},
     {"id": "theme_dark", "name": "暗夜主题", "description": "纯黑暗夜模式", "price": 100, "type": "theme", "icon": "🌙"},
     # 气泡
@@ -228,18 +229,19 @@ async def use_item(
     db: Session = Depends(get_db),
 ):
     """使用商品：设置主题、气泡或头像"""
-    # 检查是否已购买
-    purchased = (
-        db.query(Purchase)
-        .filter(Purchase.user_id == user.id, Purchase.item_id == item_id)
-        .first()
-    )
-    if not purchased:
-        raise HTTPException(status_code=400, detail="未购买该商品")
-
     item = find_item(item_id)
     if not item:
         raise HTTPException(status_code=404, detail="商品不存在")
+
+    # 免费商品（如经典主题）无需购买即可使用
+    if item.get("price", 0) > 0:
+        purchased = (
+            db.query(Purchase)
+            .filter(Purchase.user_id == user.id, Purchase.item_id == item_id)
+            .first()
+        )
+        if not purchased:
+            raise HTTPException(status_code=400, detail="未购买该商品")
 
     value = ""
     if item["type"] == "theme":

@@ -198,7 +198,7 @@ const StarStore: React.FC = () => {
               </h3>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '1rem' }}>
                 {group.map(item => {
-                  const purchased = item.purchased || getPurchasedIds().has(item.id);
+                  const purchased = item.purchased || getPurchasedIds().has(item.id) || item.price === 0;
                   const active = isActive(item);
                   const typeColor = getTypeColor(item.type);
 
@@ -213,6 +213,11 @@ const StarStore: React.FC = () => {
                         display: 'flex', flexDirection: 'column',
                       }}
                     >
+                      {item.icon && (
+                        <div style={{ fontSize: '2.5rem', textAlign: 'center', marginBottom: '0.5rem' }}>
+                          {item.icon}
+                        </div>
+                      )}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.5rem' }}>
                         <h4 style={{ fontSize: '1rem', color: 'var(--text-primary)' }}>{item.name}</h4>
                         <span style={{

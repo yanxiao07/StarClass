@@ -10,6 +10,7 @@ export interface User {
   stars?: number;
   theme?: string;
   chatBubbleStyle?: string;
+  activeAvatar?: string;
   lastNicknameChange?: Date;
   lastAvatarChange?: Date;
   isMuted?: boolean;

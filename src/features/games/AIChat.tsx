@@ -14,6 +14,12 @@ const getImageUrl = (url: string | null) => {
   return `${import.meta.env.VITE_API_URL || ''}${url}`;
 };
 
+// 商城头像框 emoji 映射
+const AVATAR_EMOJI: Record<string, string> = {
+  avatar_cat: '🐱',
+  avatar_robot: '🤖',
+};
+
 interface Message {
   id: string;
   role: 'user' | 'assistant';
@@ -138,7 +144,11 @@ const AIChat: React.FC = () => {
             <div key={msg.id} className={`message ${msg.role}`}>
               <div className="message-avatar">
                 {msg.role === 'user' ? (
-                  user?.avatar ? (
+                  user?.activeAvatar && AVATAR_EMOJI[user.activeAvatar] ? (
+                    <span style={{ fontSize: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px' }}>
+                      {AVATAR_EMOJI[user.activeAvatar]}
+                    </span>
+                  ) : user?.avatar ? (
                     <img
                       src={getImageUrl(user.avatar)}
                       alt="头像"

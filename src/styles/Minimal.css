@@ -1062,28 +1062,63 @@ body {
    所有使用变量的组件会自动适配
    ============================================ */
 
-/* 星空主题 - 深蓝夜空 */
+/* 星空主题 - 深蓝夜空 + 闪烁星星 */
 .theme-starry {
-  --bg-page: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #172554 100%);
-  --bg-surface: rgba(30, 27, 75, 0.6);
-  --bg-card: rgba(30, 27, 75, 0.6);
-  --bg-subtle: rgba(30, 27, 75, 0.4);
-  --bg-muted: rgba(15, 23, 42, 0.5);
-  --bg-hover: rgba(30, 27, 75, 0.8);
-  --bg-active: rgba(30, 27, 75, 0.9);
-  --text-primary: #f1f5f9;
-  --text-secondary: #cbd5e1;
-  --text-tertiary: #94a3b8;
-  --text-muted: #94a3b8;
-  --text-quaternary: #64748b;
-  --border-light: rgba(241, 245, 249, 0.08);
-  --border-default: rgba(241, 245, 249, 0.12);
-  --border-color: rgba(241, 245, 249, 0.12);
-  --border-strong: rgba(241, 245, 249, 0.2);
-  --navbar-bg: rgba(15, 23, 42, 0.85);
+  --bg-page: linear-gradient(135deg, #0a0e27 0%, #111c44 40%, #0d1b3e 100%);
+  --bg-surface: rgba(30, 41, 80, 0.75);
+  --bg-card: rgba(30, 41, 80, 0.75);
+  --bg-subtle: rgba(30, 41, 80, 0.5);
+  --bg-muted: rgba(15, 23, 42, 0.6);
+  --bg-hover: rgba(40, 55, 100, 0.85);
+  --bg-active: rgba(50, 65, 120, 0.9);
+  --text-primary: #f0f4ff;
+  --text-secondary: #c7d2fe;
+  --text-tertiary: #a5b4d8;
+  --text-muted: #8896c7;
+  --text-quaternary: #6b7aa0;
+  --border-light: rgba(165, 180, 252, 0.1);
+  --border-default: rgba(165, 180, 252, 0.15);
+  --border-color: rgba(165, 180, 252, 0.15);
+  --border-strong: rgba(165, 180, 252, 0.25);
+  --navbar-bg: rgba(10, 14, 39, 0.9);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.35);
+  --shadow-lg: 0 10px 30px rgba(0, 0, 0, 0.4);
   color: var(--text-primary);
+  position: relative;
 }
 
+/* 星空背景星星层 */
+.theme-starry::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    radial-gradient(1.5px 1.5px at 20% 30%, #fff, transparent),
+    radial-gradient(1px 1px at 40% 70%, #c7d2fe, transparent),
+    radial-gradient(1.5px 1.5px at 60% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 80% 50%, #fde68a, transparent),
+    radial-gradient(2px 2px at 15% 80%, #fff, transparent),
+    radial-gradient(1px 1px at 70% 90%, #c7d2fe, transparent),
+    radial-gradient(1.5px 1.5px at 90% 10%, #fff, transparent),
+    radial-gradient(1px 1px at 35% 45%, #fde68a, transparent),
+    radial-gradient(1.5px 1.5px at 55% 65%, #fff, transparent),
+    radial-gradient(1px 1px at 25% 15%, #c7d2fe, transparent),
+    radial-gradient(2px 2px at 85% 75%, #fff, transparent),
+    radial-gradient(1px 1px at 50% 5%, #fde68a, transparent);
+  background-size: 100% 100%;
+  background-repeat: no-repeat;
+  animation: starryTwinkle 4s ease-in-out infinite alternate;
+}
+
+@keyframes starryTwinkle {
+  0% { opacity: 0.5; }
+  100% { opacity: 1; }
+}
+
+/* 星空主题卡片：半透明 + 毛玻璃 + 微光边框 */
 .theme-starry .card,
 .theme-starry .stat-card,
 .theme-starry .class-item,
@@ -1092,14 +1127,54 @@ body {
 .theme-starry .chat-container,
 .theme-starry .chat-header,
 .theme-starry .chat-input-area {
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  border: 1px solid rgba(165, 180, 252, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .theme-starry .navbar {
   background: var(--navbar-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid rgba(165, 180, 252, 0.1);
+}
+
+/* 星空主题下确保内容层级在星星之上 */
+.theme-starry .navbar,
+.theme-starry main,
+.theme-starry .page-container {
+  position: relative;
+  z-index: 1;
+}
+
+/* 经典主题 - 恢复默认浅色 */
+.theme-default {
+  --bg-page: #f8fafc;
+  --bg-surface: #ffffff;
+  --bg-card: #ffffff;
+  --bg-subtle: #f1f5f9;
+  --bg-muted: #f1f5f9;
+  --bg-hover: #f1f5f9;
+  --bg-active: #e2e8f0;
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-tertiary: #64748b;
+  --text-muted: #94a3b8;
+  --text-quaternary: #94a3b8;
+  --border-light: #f1f5f9;
+  --border-default: #e2e8f0;
+  --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --navbar-bg: rgba(255, 255, 255, 0.9);
+  --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --shadow-md: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --shadow-lg: 0 10px 30px rgba(15, 23, 42, 0.1);
+  color: var(--text-primary);
+}
+
+.theme-default::before {
+  display: none;
 }
 
 /* 樱花主题 - 粉色温馨 */

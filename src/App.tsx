@@ -274,7 +274,7 @@ const AppContent: React.FC = () => {
             path="/ai-chat"
             element={
               <ProtectedRoute>
-                {isStudentWithoutClass ? <Navigate to="/classes" /> : <AIChat />}
+                <AIChat />
               </ProtectedRoute>
             }
           />
@@ -290,7 +290,7 @@ const AppContent: React.FC = () => {
             path="/store"
             element={
               <ProtectedRoute>
-                {isStudentWithoutClass ? <Navigate to="/classes" /> : <StarStore />}
+                <StarStore />
               </ProtectedRoute>
             }
           />

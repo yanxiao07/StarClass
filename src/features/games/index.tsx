@@ -120,7 +120,7 @@ const Games: React.FC = () => {
 
     try {
       setLoading(true);
-      await apiClient.put('/api/user/profile', { stars: user.stars - cost });
+      await apiClient.put('/api/users/profile', { stars: user.stars - cost });
 
       const newUnlocked = [...unlockedGames, gameId];
       setUnlockedGames(newUnlocked);
